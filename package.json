@@ -1,0 +1,20 @@
+{
+  "name": "k-to-drinks_management_system",
+  "version": "1.0.0",
+  "description": "This project consists of a frontend and a backend. Below are the steps to set up and run the development servers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "vite": "^6.2.3"
+  }
+}

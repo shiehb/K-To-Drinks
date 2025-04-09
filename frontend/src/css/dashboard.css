@@ -1,0 +1,574 @@
+/* Add a dashboard container class to fix display issues */
+.dashboard-container {
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  background-color: var(--background-color);
+  overflow-y: auto;
+  color: var(--text-color);
+}
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dashboard Container - Fit to main container */
+.space-y-6 {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--background-color);
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Dashboard header */
+.text-3xl {
+  font-size: 1.75rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.text-muted-foreground {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+}
+
+/* Tabs styling */
+.space-y-4 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Tabs list */
+.tabs-list {
+  background-color: var(--card-background);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tab[data-state="active"] {
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+}
+
+/* Cards grid layout - Improved for better fit */
+.grid {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .space-y-6 {
+    padding: 1.25rem;
+  }
+
+  .grid {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .lg\:grid-cols-7 {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+
+/* Card styling - More compact for better fit */
+.card {
+  background-color: var(--card-background);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px var(--shadow-color);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px var(--shadow-color);
+}
+
+.col-span-4 {
+  grid-column: span 4 / span 4;
+}
+
+.col-span-3 {
+  grid-column: span 3 / span 3;
+}
+
+/* Card header - More compact */
+.card-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.card-description {
+  font-size: 0.75rem;
+  color: var(--muted-text);
+  margin-top: 0.25rem;
+}
+
+.card-content {
+  padding: 0.75rem 1rem;
+  flex: 1;
+  overflow: auto;
+  color: var(--text-color);
+}
+
+.card-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-footer button {
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  transition: all 0.5s;
+}
+.card-footer button:hover {
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+  border: none;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.space-y-0 {
+  margin-top: 0;
+}
+
+.pb-2 {
+  padding-bottom: 0.5rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+/* Status colors */
+.text-green-600 {
+  color: var(--success-color);
+}
+
+.text-red-600 {
+  color: var(--error-color);
+}
+
+/* Table styling - More compact */
+.table-container {
+  overflow-x: auto;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-color);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.w-\[100px\] {
+  width: 100px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Badge styling */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.badge-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.badge-default {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.badge-secondary {
+  background-color: var(--muted-text);
+  color: white;
+}
+
+/* Button styling */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.button-primary {
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+}
+
+.button-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.button-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.button-outline:hover {
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+}
+
+.button-ghost {
+  background-color: transparent;
+  color: var(--text-color);
+  padding: 0.25rem;
+}
+
+.button-ghost:hover {
+  background-color: var(--background-color);
+}
+
+.button-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.button-icon {
+  padding: 0.375rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Performance metrics */
+.metrics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  color: var(--text-color);
+}
+
+.metric-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+}
+
+.metric-dot {
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: var(--text-color);
+}
+
+.metric-value {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.bg-orange-500 {
+  background-color: var(--warning-color);
+}
+
+.bg-red-500 {
+  background-color: var(--error-color);
+}
+
+.mr-4 {
+  margin-right: 1rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.ml-auto {
+  margin-left: auto;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.pt-4 {
+  padding-top: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+/* Driver profile */
+.driver-container {
+  margin-top: 1rem;
+}
+
+.driver-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.driver-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.driver-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  color: var(--text-color);
+}
+
+.driver-item:hover {
+  background-color: var(--primary-hover);
+}
+
+.driver-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background-color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+  color: var(--stext-color);
+}
+
+.driver-info {
+  flex: 1;
+}
+
+.driver-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.driver-stat {
+  font-size: 0.75rem;
+  color: var(--muted-text);
+}
+.driver-list button {
+  height: 35px;
+  width: 25%;
+  color: var(--text-color);
+}
+
+.h-4 {
+  height: 1rem;
+}
+
+.w-4 {
+  width: 1rem;
+}
+
+/* Analytics and Reports placeholders */
+.placeholder {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-text);
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .space-y-6 {
+    padding: 0.75rem;
+  }
+
+  .text-3xl {
+    font-size: 1.5rem;
+  }
+
+  .col-span-4,
+  .col-span-3 {
+    grid-column: span 1;
+  }
+
+  .card-header,
+  .card-content,
+  .card-footer {
+    padding: 0.625rem 0.75rem;
+  }
+}
+
+/* Fix for small screens */
+@media (max-width: 480px) {
+  .button {
+    padding: 0.375rem 0.625rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem 0.625rem;
+  }
+}
+
+/* Scrollbar styling */
+.space-y-6::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.space-y-6::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.space-y-6::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.space-y-6::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure content doesn't overflow */
+.tab-content {
+  width: 100%;
+  overflow: hidden;
+}
+

@@ -1,0 +1,346 @@
+@import "tailwindcss";
+@import "@fortawesome/fontawesome-free/css/all.css";
+@import url("https://fonts.cdnfonts.com/css/product-sans");
+@import "tw-animate-css";
+
+/* Root Variables - Light Mode (Default) */
+:root {
+  /* Brand Colors */
+  --primary-color: #c23a22;
+  --primary-hover: rgba(194, 58, 34, 0.8);
+  
+  /* Text Colors */
+  --text-color: #0c1d32;
+  --text-primary: #0c1d32;
+  --text-secondary: #2d3748;
+  --text-tertiary: #4a5568;
+  --stext-color: #e8e8e8;
+  
+  /* UI Colors */
+  --border-color: #d1d5db;
+  --sborder-color: #e8e8e8;
+  --shadow-color: rgba(87, 87, 87, 0.2);
+  --background-color: #ffffff;
+  --sbackground-color: #f9fafb;
+  
+  /* Status Colors */
+  --error-color: #c23a22;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  
+  /* Muted Colors */
+  --muted-text: #6c757d;
+  --muted-foreground: #6c757d;
+  
+  /* Component Colors */
+  --card-background: #ffffff;
+  
+  /* Design Tokens */
+  --radius: 0.625rem;
+  --transition-speed: 0.3s;
+  
+  /* ShadCN Compatible */
+  --background: #ffffff;
+  --foreground: #0c1d32;
+  --card: #ffffff;
+  --card-foreground: #0c1d32;
+  --popover: #ffffff;
+  --popover-foreground: #0c1d32;
+  --primary: #c23a22;
+  --primary-foreground: #ffffff;
+  --secondary: #f9fafb;
+  --secondary-foreground: #0c1d32;
+  --accent: #f9fafb;
+  --accent-foreground: #0c1d32;
+  --destructive: #ef4444;
+  --input: #d1d5db;
+  --ring: #c23a22;
+  
+  /* Chart Colors */
+  --chart-1: #c23a22;
+  --chart-2: #3b82f6;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #8b5cf6;
+  
+  /* Sidebar Colors */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0c1d32;
+  --sidebar-primary: #c23a22;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f9fafb;
+  --sidebar-accent-foreground: #0c1d32;
+  --sidebar-border: #d1d5db;
+}
+
+/* Dark Mode Variables */
+.dark {
+  /* Brand Colors */
+  --primary-color: #e74c3c;
+  --primary-hover: rgba(231, 76, 60, 0.8);
+  
+  /* Text Colors */
+  --text-color: #f8f9fa;
+  --text-primary: #f8f9fa;
+  --text-secondary: #e9ecef;
+  --text-tertiary: #dee2e6;
+  --stext-color: #0c1d32;
+  
+  /* UI Colors */
+  --border-color: #555555;
+  --sborder-color: #444444;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --background-color: #121212;
+  --sbackground-color: #1e1e1e;
+  
+  /* Status Colors */
+  --error-color: #ff5252;
+  --success-color: #66bb6a;
+  --warning-color: #ffb74d;
+  
+  /* Muted Colors */
+  --muted-text: #b0b0b0;
+  --muted-foreground: #a0a0a0;
+  
+  /* Component Colors */
+  --card-background: #1e1e1e;
+  
+  /* ShadCN Compatible */
+  --background: #121212;
+  --foreground: #f8f9fa;
+  --card: #1e1e1e;
+  --card-foreground: #f8f9fa;
+  --popover: #1e1e1e;
+  --popover-foreground: #f8f9fa;
+  --primary: #e74c3c;
+  --primary-foreground: #ffffff;
+  --secondary: #2d2d2d;
+  --secondary-foreground: #f8f9fa;
+  --accent: #2d2d2d;
+  --accent-foreground: #f8f9fa;
+  --destructive: #ef4444;
+  --input: #555555;
+  --ring: #e74c3c;
+  
+  /* Chart Colors */
+  --chart-1: #e74c3c;
+  --chart-2: #60a5fa;
+  --chart-3: #34d399;
+  --chart-4: #fbbf24;
+  --chart-5: #a78bfa;
+  
+  /* Sidebar Colors */
+  --sidebar: #1e1e1e;
+  --sidebar-foreground: #f8f9fa;
+  --sidebar-primary: #e74c3c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2d2d2d;
+  --sidebar-accent-foreground: #f8f9fa;
+  --sidebar-border: #555555;
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Product Sans", Arial, sans-serif;
+  transition: 
+    background-color var(--transition-speed) ease, 
+    color var(--transition-speed) ease, 
+    border-color var(--transition-speed) ease;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+p, span, li {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--muted-text) !important;
+}
+
+/* Dark Mode Text Overrides */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark p,
+.dark span,
+.dark li,
+.dark a:not(.button) {
+  color: var(--text-primary);
+}
+
+.dark .text-secondary {
+  color: var(--text-secondary);
+}
+
+.dark .text-muted,
+.dark .text-muted-foreground {
+  color: var(--muted-text) !important;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--primary-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Layout Styles */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--background-color);
+}
+
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  position: relative;
+  margin-top: var(--header-height);
+  min-height: calc(100vh - var(--header-height));
+}
+
+.main-content {
+  flex: 1;
+  background-color: var(--background-color);
+  min-height: calc(100vh - var(--header-height));
+  padding: 20px;
+  transition: all 0.3s ease;
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Component Overrides */
+.dark .table th,
+.dark .table td {
+  color: var(--text-primary);
+  background-color: var(--card-background);
+}
+
+.dark .table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .card {
+  background-color: var(--card-background);
+  border-color: var(--border-color);
+}
+
+.dark .card-title,
+.dark .card-description {
+  color: var(--text-primary);
+}
+
+.dark .badge {
+  color: white;
+}
+
+.dark .button-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dark .button-outline {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Status Badges */
+.dark .badge-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.dark .badge-default {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.dark .badge-secondary {
+  background-color: var(--muted-text);
+  color: white;
+}
+
+/* Driver List */
+.dark .driver-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .driver-name {
+  color: var(--text-primary);
+}
+
+.dark .driver-stat {
+  color: var(--muted-text);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 15px;
+  }
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn var(--transition-speed) ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Utility Classes */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.bg-card {
+  background-color: var(--card-background);
+}
