@@ -1,23 +1,12 @@
-import { Config } from "tailwindcss"
-
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ['./src/**/*.{html,js,jsx,ts,tsx,css}'], // Adjust paths as needed
-    theme: {
-      extend: {},
-    },
-    plugins: [],
-  }
-
-const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    './pages/**/*.{ts,tsx,js,jsx}',
+    './components/**/*.{ts,tsx,js,jsx}',
+    './app/**/*.{ts,tsx,js,jsx}',
+    './src/**/*.{ts,tsx,js,jsx}',
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,
@@ -69,12 +58,12 @@ const config = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
+          from: { height: 0 },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          to: { height: 0 },
         },
       },
       animation: {
@@ -85,6 +74,4 @@ const config = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-
-export default config
 

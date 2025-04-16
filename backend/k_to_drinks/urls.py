@@ -41,9 +41,5 @@ urlpatterns = [
   
   # Authentication
   path('api/token/', include('apps.users.auth_urls')),
-]
-
-# Serve media files in development
-if settings.DEBUG:
-  urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

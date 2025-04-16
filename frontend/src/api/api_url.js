@@ -1,62 +1,58 @@
-import axios from "axios"
+import axios from 'axios'
 
-export const API_URL = "http://127.0.0.1:8000/api"
+const BASE_URL = 'http://localhost:8000/api'
+
+// Define API endpoints
+export const ENDPOINTS = {
+  STORES: '/stores',
+  AUTH: '/auth',
+  USERS: '/users'
+}
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: BASE_URL,
   headers: {
-    "Content-Type": "application/json",
-  },
+    'Content-Type': 'application/json',
+  }
 })
 
-// Request interceptor for JWT token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token")
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  
+  // Log request details for debugging
+  console.log('API Request:', {
+    url: config.url,
+    method: config.method,
+    params: config.params,
+    headers: config.headers
+  })
+  
+  return config
+})
+
+api.interceptors.response.use(
+  (response) => {
+    // Log successful response
+    console.log('API Response:', response.data)
+    return response
   },
   (error) => {
-    return Promise.reject(error)
-  },
-)
-
-// Response interceptor for token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-
-    // If 401 error and not a retry attempt
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-
-      try {
-        const refreshToken = localStorage.getItem("refresh_token")
-        if (!refreshToken) throw new Error("No refresh token")
-
-        const response = await axios.post(`${API_URL}/token/refresh/`, {
-          refresh: refreshToken,
-        })
-
-        localStorage.setItem("access_token", response.data.access)
-        api.defaults.headers.common["Authorization"] = `Bearer ${response.data.access}`
-
-        // Retry original request with new token
-        return api(originalRequest)
-      } catch (refreshError) {
-        // If refresh fails, clear storage and redirect to login
-        localStorage.removeItem("access_token")
-        localStorage.removeItem("refresh_token")
-        window.location.href = "/"
-        return Promise.reject(refreshError)
-      }
+    // Log error details
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    })
+    
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token')
+      window.location.href = '/login'
     }
-
     return Promise.reject(error)
-  },
+  }
 )
 
 export default api

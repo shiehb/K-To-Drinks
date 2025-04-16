@@ -9,19 +9,36 @@ class Order(TimeStampedModel):
     """
     Order model
     """
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    )
+    ORDER_STATUS = [
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Completed', 'Completed'),
+        ('Cancelled', 'Cancelled'),
+    ]
 
-    order_id = models.CharField(max_length=50, unique=True)
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='orders')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='orders')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    delivery_day = models.CharField(max_length=20, choices=Store._meta.get_field('day').choices)
-    notes = models.TextField(blank=True, null=True)
+    order_id = models.CharField(max_length=12, unique=True)
+    store = models.ForeignKey(
+        Store,
+        on_delete=models.CASCADE,
+        related_name='orders'
+    )
+    delivery_day = models.CharField(
+        max_length=20,
+        choices=Store.DAYS_OF_WEEK,
+        default='Monday'
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=ORDER_STATUS,
+        default='Pending'
+    )
+    notes = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='orders_created'
+    )
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)

@@ -1,83 +1,115 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { NavLink, useLocation } from "react-router-dom"
+import PropTypes from "prop-types"
 import "../css/nav.css"
 
 function NavBar({ isOpen, isMobile, isHidden }) {
   const location = useLocation()
-  const [showOrderDropdown, setShowOrderDropdown] = useState(false)
+  const [activeGroup, setActiveGroup] = useState("")
+  const dropdownRef = useRef(null)
 
-  const navItems = [
-    { path: "/user", icon: "people", label: "Manage User" },
-    { path: "/dashboard", icon: "dashboard", label: "Dashboard" },
-    { path: "/localstore", icon: "store", label: "Local Store" },
-    { path: "/inventory", icon: "inventory", label: "Inventory" },
-    { path: "/products", icon: "layers", label: "Products" },
-  ]
+  // Dashboard as a standalone item
+  const dashboardItem = { path: "/dashboard", icon: "dashboard", label: "Dashboard" }
 
-  const toggleOrderDropdown = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setShowOrderDropdown(!showOrderDropdown)
+  const navGroups = {
+    management: [
+      { path: "/user", icon: "people", label: "Users" },
+      { path: "/localstore", icon: "store", label: "Stores" },
+    ],
+    inventory: [
+      { path: "/inventory", icon: "inventory_2", label: "Stock" },
+      { path: "/products", icon: "category", label: "Products" },
+    ],
+    operations: [
+      { path: "/order", icon: "receipt", label: "Orders" },
+      { path: "/delivery", icon: "local_shipping", label: "Delivery" },
+    ],
+    reports: [
+      { path: "/reports", icon: "assessment", label: "Reports" },
+    ]
   }
 
-  // Check if current route is order or delivery
-  const isOrderActive = location.pathname === "/order" || location.pathname === "/delivery"
+  const isPathActive = (path) => location.pathname === path
+  const isGroupActive = (paths) => paths.some(item => isPathActive(item.path))
+
+  useEffect(() => {
+    Object.entries(navGroups).forEach(([group, items]) => {
+      if (isGroupActive(items)) {
+        setActiveGroup(group)
+      }
+    })
+  }, [location])
 
   return (
     <nav
       className={`navigation ${isOpen ? "open" : "closed"} ${isMobile ? "mobile" : ""} ${isHidden ? "hidden" : ""}`}
       aria-hidden={!isOpen && isMobile}
     >
-      <div className="nav-container">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${isActive ? "active" : ""} ${!isOpen ? "collapsed" : ""}`}
-              title={item.label}
-            >
-              <span className="material-icons nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </NavLink>
-          )
-        })}
-
-        {/* Order & Delivery Dropdown */}
-        <div className="nav-dropdown-container">
-          <button
-            className={`nav-item dropdown-toggle ${isOrderActive ? "active" : ""} ${!isOpen ? "collapsed" : ""}`}
-            onClick={toggleOrderDropdown}
-          >
-            <span className="material-icons nav-icon">shopping_cart</span>
-            <span className="nav-label">Order & Delivery</span>
-            <span className="material-icons dropdown-icon">{showOrderDropdown ? "expand_less" : "expand_more"}</span>
-          </button>
-
-          {showOrderDropdown && (
-            <div className="nav-dropdown">
-              <NavLink to="/order" className={`nav-dropdown-item ${location.pathname === "/order" ? "active" : ""}`}>
-                <span className="material-icons nav-icon">receipt</span>
-                <span className="nav-label">Order</span>
-              </NavLink>
-              <NavLink
-                to="/delivery"
-                className={`nav-dropdown-item ${location.pathname === "/delivery" ? "active" : ""}`}
-              >
-                <span className="material-icons nav-icon">local_shipping</span>
-                <span className="nav-label">Delivery</span>
-              </NavLink>
-            </div>
-          )}
+      <div className="nav-header">
+        <div className="logo-container">
+          <span className="material-icons logo-icon">local_cafe</span>
+          {isOpen && <span className="logo-text">K-To-Drinks</span>}
         </div>
+      </div>
+
+      <div className="nav-content" ref={dropdownRef}>
+        {/* Dashboard Item */}
+        <NavLink
+          to={dashboardItem.path}
+          className={`nav-item ${isPathActive(dashboardItem.path) ? "active" : ""} ${!isOpen ? "collapsed" : ""}`}
+          title={dashboardItem.label}
+        >
+          <span className="material-icons nav-icon">{dashboardItem.icon}</span>
+          {isOpen && <span className="nav-label">{dashboardItem.label}</span>}
+        </NavLink>
+
+        {/* Navigation Groups */}
+        {Object.entries(navGroups).map(([group, items]) => (
+          <div 
+            key={group} 
+            className={`nav-group ${activeGroup === group ? 'active' : ''}`}
+          >
+            <div className="nav-group-header">
+              {isOpen && <span className="group-title">{group}</span>}
+            </div>
+            <div className="nav-group-items">
+              {items.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={`nav-item ${isPathActive(item.path) ? "active" : ""} ${!isOpen ? "collapsed" : ""}`}
+                  title={item.label}
+                >
+                  <span className="material-icons nav-icon">{item.icon}</span>
+                  {isOpen && <span className="nav-label">{item.label}</span>}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="nav-footer">
+        <button className="nav-footer-item" onClick={() => {}}>
+          <span className="material-icons">settings</span>
+          {isOpen && <span>Settings</span>}
+        </button>
+        <button className="nav-footer-item" onClick={() => {}}>
+          <span className="material-icons">help_outline</span>
+          {isOpen && <span>Help</span>}
+        </button>
       </div>
     </nav>
   )
 }
 
-export default NavBar
+// Add PropTypes for props validation
+NavBar.propTypes = {
+  isOpen: PropTypes.bool.isRequired, // Validate isOpen as a required boolean
+  isMobile: PropTypes.bool, // Optional boolean
+  isHidden: PropTypes.bool, // Optional boolean
+}
 
+export default NavBar

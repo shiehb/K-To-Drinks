@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Archive, Info, RefreshCcw } from "lucide-react";
+import { Plus, Search, Edit, Archive, Eye, RefreshCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import "../../css/product.css";
 
@@ -49,7 +49,8 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("active"); // State to track active tab
+  const [activeTab, setActiveTab] = useState("active");
+  const tableRef = useRef(null);
 
   const filteredProducts = products.filter(
     (product) =>
@@ -62,86 +63,12 @@ export default function ProductsPage() {
     setIsViewDialogOpen(true);
   };
 
-  const renderActionButtons = (product) => (
-    <TableCell className="actions-cell">
-      <div className="actions-container">
-        {product.status === "archived" ? (
-          // Buttons for archived products
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewProduct(product)}
-              className="action-button"
-            >
-              <Info className="action-icon" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => console.log("Restore product")}
-              className="restore-button"
-            >
-              <RefreshCcw className="action-icon" />
-              Restore
-            </Button>
-          </>
-        ) : (
-          // Buttons for active products
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewProduct(product)}
-              className="action-button"
-            >
-              <Info className="action-icon" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => console.log("Edit product")}
-              className="action-button"
-            >
-              <Edit className="action-icon" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => console.log("Archive product")}
-              className="action-button"
-            >
-              <Archive className="action-icon" />
-            </Button>
-          </>
-        )}
-      </div>
-    </TableCell>
-  );
-
   return (
     <Card className="product-management-card">
       <CardHeader className="card-header">
         <div className="header-container">
-          <CardTitle className="card-title">Product Management</CardTitle>
-          <Button size="sm" className="add-button">
-            <Plus className="icon" />
-            Add Product
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="card-content">
-        <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="tabs-container">
-          <div className="tabs-header">
-            <TabsList className="tabs-list">
-              <TabsTrigger value="active" className="tab">
-                Active Products
-              </TabsTrigger>
-              <TabsTrigger value="archived" className="tab">
-                Archived Products
-              </TabsTrigger>
-            </TabsList>
-            <div className="search-container">
+          <div className="search-input-container">
+            <div className="search-wrapper">
               <Search className="search-icon" />
               <Input
                 placeholder="Search products..."
@@ -151,123 +78,140 @@ export default function ProductsPage() {
               />
             </div>
           </div>
+          <div className="button-group">
+            <Button size="sm" className="add-button">
+              <Plus className="icon" />
+              Add Product
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="card-content">
+        <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="tabs-container">
+          <div className="filter-container">
+            <TabsList className="tabs-list">
+              <TabsTrigger value="active" className="tab">
+                Active Products
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="tab">
+                Archived Products
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <div className="status-container">
+            <div className="status-content">
+              <div className="status-text">
+                Showing <strong>{filteredProducts.length}</strong> of{" "}
+                <strong>
+                  {products.filter((product) =>
+                    activeTab === "archived" ? product.status === "archived" : product.status === "active"
+                  ).length}
+                </strong>{" "}
+                {activeTab} products
+              </div>
+            </div>
+          </div>
 
           <TabsContent value="active" className="tab-content">
-            <Table className="product-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.length === 0 ? (
+            <div className="table-container">
+              <Table className="product-table" ref={tableRef}>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="empty-cell">
-                      No products found
-                    </TableCell>
+                    <TableHead className="text-center">Product Name</TableHead>
+                    <TableHead className="text-center">SKU</TableHead>
+                    <TableHead className="text-center">Stock</TableHead>
+                    <TableHead className="text-center">Price</TableHead>
+                    <TableHead className="text-center">Date Added</TableHead>
+                    <TableHead className="actions-column text-center">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell>{product.sku}</TableCell>
-                      <TableCell>
-                        <Badge>{product.stock}</Badge>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center">
+                        No products found
                       </TableCell>
-                      <TableCell>₱{product.price.toFixed(2)}</TableCell>
-                      {renderActionButtons(product)}
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="text-center">{product.name}</TableCell>
+                        <TableCell className="text-center">{product.sku}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline">{product.stock}</Badge>
+                        </TableCell>
+                        <TableCell className="text-center">₱{product.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-center">
+                          {new Date().toLocaleDateString("en-US")}
+                        </TableCell>
+                        <TableCell className="actions-cell text-center">
+                          <div className="actions-container">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewProduct(product)}
+                              className="action-button"
+                            >
+                              <Eye className="action-icon" />
+                              <span className="sr-only">View</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => console.log("Edit product")}
+                              className="action-button"
+                            >
+                              <Edit className="action-icon" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => console.log("Archive product")}
+                              className="action-button"
+                            >
+                              <Archive className="action-icon" />
+                              <span className="sr-only">Archive</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </TabsContent>
 
           <TabsContent value="archived" className="tab-content">
-            <Table className="product-table">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="empty-cell">
-                      <div className="loading-indicator">
-                        No archived products found
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell>{product.sku}</TableCell>
-                      <TableCell>
-                        <Badge>{product.stock}</Badge>
-                      </TableCell>
-                      <TableCell>₱{product.price.toFixed(2)}</TableCell>
-                      <TableCell className="actions-cell">
-                        <div className="actions-container">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewProduct(product)}
-                            className="action-button"
-                          >
-                            <Info className="action-icon" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => console.log("Restore product")}
-                            className="restore-button"
-                          >
-                            <RefreshCcw className="action-icon" />
-                            Restore
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            {/* Similar table structure for archived products */}
           </TabsContent>
         </Tabs>
-      </CardContent>
 
-      {/* View Product Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Product Details</DialogTitle>
-          </DialogHeader>
-          {selectedProduct && (
-            <div>
-              <h3>{selectedProduct.name}</h3>
-              <p>SKU: {selectedProduct.sku}</p>
-              <p>Price: ₱{selectedProduct.price.toFixed(2)}</p>
-              <p>Stock: {selectedProduct.stock}</p>
-              <p>{selectedProduct.description}</p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="dialog-content">
+            <DialogHeader>
+              <DialogTitle>Product Details</DialogTitle>
+            </DialogHeader>
+            {selectedProduct && (
+              <div className="product-details">
+                <h3>{selectedProduct.name}</h3>
+                <p><strong>SKU:</strong> {selectedProduct.sku}</p>
+                <p><strong>Price:</strong> ₱{selectedProduct.price.toFixed(2)}</p>
+                <p><strong>Stock:</strong> {selectedProduct.stock}</p>
+                <p><strong>Description:</strong> {selectedProduct.description}</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
     </Card>
   );
 }

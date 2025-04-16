@@ -35,14 +35,35 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Add custom claims to the token
+        refresh = self.get_token(self.user)
+        
+        # Include all necessary user data in the response
+        data['user'] = {
+            'id': self.user.id,
+            'username': self.user.username,
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name,
+            'email': self.user.email,
+            'role': self.user.role,
+            'status': self.user.status
+        }
+        
+        return data
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
 
-        # Add custom claims
+        # Add custom claims to the token itself
         token['username'] = user.username
         token['first_name'] = user.first_name
         token['last_name'] = user.last_name
+        token['user_id'] = user.id
+        token['role'] = user.role
+        token['status'] = user.status
 
         return token
-

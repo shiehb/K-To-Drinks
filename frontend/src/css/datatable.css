@@ -1,0 +1,105 @@
+.table-container {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--background-color);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  background-color: var(--primary-color);
+  z-index: 10;
+}
+
+.data-table th {
+  color: var(--stext-color);
+  background-color: var(--primary-color);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+.data-table td:last-child {
+  padding-right: 1.5rem; /* Add more padding to the right side of the last column */
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.loading-cell,
+.empty-cell {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-color);
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color);
+}
+
+.loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.action-cell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem; /* Increase gap between action buttons */
+  padding: 0.5rem;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem; /* Slightly larger buttons */
+  height: 2.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  background-color: transparent;
+  transition: all 0.2s;
+}
+
+.action-button:last-child {
+  margin-right: 0.5rem; /* Add extra margin to the last button */
+}
+
+.action-button:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.action-button svg {
+  width: 1rem;
+  height: 1rem;
+}

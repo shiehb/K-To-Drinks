@@ -3,31 +3,48 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
+import PropTypes from "prop-types"
 import { useAuth } from "../context/AuthContext"
 import "../css/header.css"
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
 
-export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibility, sidebarHidden }) {
+// Helper function to get initials
+function getInitials(firstName, lastName, userName) {
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase()
+  }
+  return userName ? userName[0].toUpperCase() : "G"
+}
+
+export default function Header({ toggleSidebar, sidebarOpen }) {
   const navigate = useNavigate()
-  const { user, logout, darkMode, toggleDarkMode } = useAuth()
+  const { user, logout, darkMode, toggleDarkMode, loading } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [menuHovered, setMenuHovered] = useState(false)
   const [toastId, setToastId] = useState(null)
 
-  // Extract user information from the auth context
-  const userName = user?.username || "Username"
-  const firstName = user?.firstName || ""
-  const lastName = user?.lastName || ""
+  // Extract user data with proper field names
+  const userName = user?.username || "Guest"
+  const firstName = user?.firstName || "" // Matches the casing from AuthContext
+  const lastName = user?.lastName || ""   // Matches the casing from AuthContext
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : userName
 
-  // Add a useEffect to log user information for debugging
+  // Development logging with proper Vite env variable
   useEffect(() => {
-    console.log("Current user in Header:", user); // Log the user object
-  }, [user])
+    if (import.meta.env.DEV) {
+      console.log("Header user data:", {
+        user,
+        derived: { userName, firstName, lastName, displayName }
+      });
+    }
+  }, [user, userName, firstName, lastName, displayName]);
 
+  // Toggle the user menu
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev)
   }
 
+  // Auto-close menu after timeout if not hovered
   useEffect(() => {
     if (isMenuOpen && !menuHovered) {
       const timer = setTimeout(() => {
@@ -37,6 +54,7 @@ export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibi
     }
   }, [isMenuOpen, menuHovered])
 
+  // Handle logout confirmation
   const handleLogoutClick = () => {
     if (toastId !== null) {
       toast.dismiss(toastId)
@@ -68,7 +86,7 @@ export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibi
         draggable: false,
         closeButton: false,
         onClose: () => setToastId(null),
-      },
+      }
     )
 
     setToastId(id)
@@ -76,28 +94,27 @@ export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibi
 
   return (
     <>
-      <header className="top-header" role="banner">
+      <header className={`top-header ${darkMode ? "dark" : ""}`} role="banner">
         <div className="header-left">
+          {/* Sidebar Toggle */}
           <div className="header-controls">
             <button
               className="sidebar-toggle"
               onClick={toggleSidebar}
               aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
               title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              disabled={loading}
             >
-              <span className="material-icons">{sidebarOpen ? "menu_open" : "menu"}</span>
+              <span className="material-icons">
+                {loading ? "hourglass_empty" : sidebarOpen ? "menu_open" : "menu"}
+              </span>
             </button>
           </div>
 
+          {/* Company Name */}
           <div className="company-name">
             <div className="title-top">K-TO-DRINKS</div>
             <div className="title-bottom">TRADING</div>
-          </div>
-        </div>
-
-        <div className="header-center">
-          <div className="user-name" aria-label="User name">
-            <span>Welcome, </span> {displayName}
           </div>
         </div>
 
@@ -108,42 +125,57 @@ export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibi
             onClick={toggleDarkMode}
             aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
             title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            disabled={loading}
           >
-            <span className="material-icons">{darkMode ? "light_mode" : "dark_mode"}</span>
+            <span className="material-icons">
+              {darkMode ? "light_mode" : "dark_mode"}
+            </span>
           </button>
 
+          {/* Replace menu-icon with Avatar */}
           <div
-            className="menu-icon"
-            onClick={toggleMenu}
+            className={`menu-trigger ${loading ? "loading" : ""}`}
+            onClick={!loading ? toggleMenu : undefined}
             role="button"
-            tabIndex="0"
+            tabIndex={!loading ? "0" : undefined}
             aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
-            onKeyDown={(e) => e.key === "Enter" && toggleMenu()}
+            onKeyDown={(e) => !loading && e.key === "Enter" && toggleMenu()}
           >
-            {isMenuOpen ? (
-              <span className="material-icons">close</span>
+            {loading ? (
+              <span className="material-icons">hourglass_empty</span>
             ) : (
-              <span className="material-icons">account_circle</span>
+              <Avatar>
+                <AvatarImage src={user?.avatarUrl} alt={displayName} />
+                <AvatarFallback>
+                  {getInitials(firstName, lastName, userName)}
+                </AvatarFallback>
+              </Avatar>
             )}
           </div>
         </div>
       </header>
 
+      {/* Dropdown Menu */}
       {isMenuOpen && (
         <div
-          className="menu-dropdown"
+          className={`menu-dropdown ${darkMode ? "dark" : ""}`}
           onMouseEnter={() => setMenuHovered(true)}
           onMouseLeave={() => setMenuHovered(false)}
           role="menu"
         >
           <ul>
             <li role="menuitem" className="user-profile">
-              <span className="material-icons profile-icon">account_circle</span>
+              <Avatar className="size-10">
+                <AvatarImage src={user?.avatarUrl} alt={displayName} />
+                <AvatarFallback>
+                  {getInitials(firstName, lastName, userName)}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <div className="user-full-name">
-                  {firstName} {lastName}
+                  {firstName && lastName ? `${firstName} ${lastName}` : "Guest User"}
                 </div>
-                <div className="user-username">{userName}</div>
+                <div className="user-username">@{userName}</div>
               </div>
             </li>
 
@@ -158,7 +190,9 @@ export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibi
             </li>
 
             <li role="menuitem" className="menu-item" onClick={toggleDarkMode}>
-              <span className="material-icons nav-icon">{darkMode ? "light_mode" : "dark_mode"}</span>
+              <span className="material-icons nav-icon">
+                {darkMode ? "light_mode" : "dark_mode"}
+              </span>
               {darkMode ? "Light Mode" : "Dark Mode"}
             </li>
 
@@ -173,3 +207,16 @@ export default function Header({ toggleSidebar, sidebarOpen, toggleSidebarVisibi
   )
 }
 
+// PropTypes validation
+Header.propTypes = {
+  toggleSidebar: PropTypes.func.isRequired,
+  sidebarOpen: PropTypes.bool.isRequired,
+  toggleSidebarVisibility: PropTypes.func,
+  sidebarHidden: PropTypes.bool,
+}
+
+// Default props
+Header.defaultProps = {
+  toggleSidebarVisibility: () => {},
+  sidebarHidden: false,
+}

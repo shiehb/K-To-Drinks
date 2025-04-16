@@ -1,4 +1,4 @@
-import LocalStore from "../components/LocalStore"
+import LocalStore from "../components/store/StoresPage"
 
 export default function LocalStorePage() {
   return (

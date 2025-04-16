@@ -46,7 +46,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-   'corsheaders.middleware.CorsMiddleware',  # Make sure this is at the top
+   'corsheaders.middleware.CorsMiddleware',  # This must be first
    'django.middleware.security.SecurityMiddleware',
    'django.contrib.sessions.middleware.SessionMiddleware',
    'django.middleware.common.CommonMiddleware',
@@ -110,8 +110,14 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if DEBUG:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static')
+    ]
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -121,66 +127,52 @@ AUTH_USER_MODEL = 'users.User'
 
 # REST Framework settings
 REST_FRAMEWORK = {
-   'DEFAULT_AUTHENTICATION_CLASSES': (
-       'rest_framework_simplejwt.authentication.JWTAuthentication',
-   ),
-   'DEFAULT_PERMISSION_CLASSES': (
-       'rest_framework.permissions.IsAuthenticated',
-   ),
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend'
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
 
-# CORS settings - Updated for proper configuration
-CORS_ALLOW_ALL_ORIGINS = False
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = False  # Keep this False for security
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",  # Vite default port
+    "http://localhost:5173",  # Add Vite's default port
+    "http://localhost:3000",  # Keep this if you also use React's default port
     "http://127.0.0.1:5173",
-    "http://localhost:5184",  # Vite 2 default port
-    "http://127.0.0.1:5184",
-    "https://k-to-drinks.netlify.app",
 ]
 
-# Allow all methods
-CORS_ALLOW_METHODS = [
-   'GET',
-   'POST',
-   'PUT',
-   'PATCH',
-   'DELETE',
-   'OPTIONS',
-]
+CORS_ALLOW_CREDENTIALS = True
 
-# Allow specific headers including content-security-policy
+# Update CORS headers to include all necessary ones
 CORS_ALLOW_HEADERS = [
-   'accept',
-   'accept-encoding',
-   'authorization',
-   'content-type',
-   'content-security-policy',  # Added this header to fix the CORS issue
-   'dnt',
-   'origin',
-   'user-agent',
-   'x-csrftoken',
-   'x-requested-with',
-   'x-csrf-token',
-   'access-control-allow-origin',
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'access-control-allow-origin',
+    'access-control-allow-headers',
+    'access-control-allow-credentials',
 ]
 
-# Expose headers that frontend might need
+# Ensure these headers are exposed to the frontend
 CORS_EXPOSE_HEADERS = [
-   'content-type',
-   'content-length',
-   'access-control-allow-origin',
-   'access-control-allow-headers',
+    'content-type',
+    'content-length',
+    'access-control-allow-origin',
+    'access-control-allow-headers',
+    'access-control-allow-credentials',
 ]
 
 # JWT settings
 from datetime import timedelta
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-   'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+   'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+   'ROTATE_REFRESH_TOKENS': True,
+   'BLACKLIST_AFTER_ROTATION': True,
+   'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.CustomTokenObtainPairSerializer',
 }

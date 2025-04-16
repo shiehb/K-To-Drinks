@@ -1,20 +1,20 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { toast } from "react-toastify"
 import api from "../../api/api_url"
-import { Archive, Download, Edit, RefreshCcw, Search, UserPlus, Eye } from "lucide-react"
-import bcrypt from "bcryptjs"
-import jsPDF from "jspdf";
+import { Archive, Edit, Search, UserPlus, Eye, ArchiveRestore } from "lucide-react"
+import jsPDF from "jspdf"
+import { useLongPress } from "@/hooks/useLongPress"
 
 // Import shadcn components
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DataTable } from "@/components/ui/DataTable"
 
 import "../../css/usermanagement.css"
 
@@ -24,7 +24,7 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState("")
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("active")
-  const inputRef = useRef(null); // Define inputRef
+  const inputRef = useRef(null)
   const [userForm, setUserForm] = useState({
     id: null,
     username: "",
@@ -45,52 +45,34 @@ export default function UserManagement() {
     onConfirm: () => {},
   })
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [showCheckboxes, setShowCheckboxes] = useState(false) // State to control checkbox visibility
-  const longPressTimer = useRef(null)
-  const tableRef = useRef(null) // Reference to the table
-  const [viewUser, setViewUser] = useState(null); // Add this line
+  const [showCheckboxes, setShowCheckboxes] = useState(false)
+  const [viewUser, setViewUser] = useState(null)
 
-  // Handle long press start
-  const handleLongPressStart = (userId) => {
-    longPressTimer.current = setTimeout(() => {
-      setShowCheckboxes(true) // Show checkboxes on long press
-      if (!selectedUsers.includes(userId)) {
-        setSelectedUsers((prev) => [...prev, userId])
+  const handleClickOutside = useCallback((event) => {
+    const tableElement = document.querySelector('.table-container');
+    if (tableElement && !tableElement.contains(event.target) && showCheckboxes) {
+      if (selectedUsers.length === 0) {
+        setShowCheckboxes(false);
       }
-    }, 500) // Trigger after 500ms
-  }
-
-  // Handle long press end
-  const handleLongPressEnd = () => {
-    clearTimeout(longPressTimer.current)
-  }
-
-  // Handle checkbox toggle
-  const handleCheckboxChange = (userId) => {
-    setSelectedUsers((prevSelected) =>
-      prevSelected.includes(userId)
-        ? prevSelected.filter((id) => id !== userId) // Remove if already selected
-        : [...prevSelected, userId] // Add if not selected
-    )
-  }
-
-  // Hide checkboxes when clicking outside the table
-  const handleClickOutside = (event) => {
-    if (
-      tableRef.current &&
-      !tableRef.current.contains(event.target) &&
-      selectedUsers.length === 0
-    ) {
-      setShowCheckboxes(false) // Hide checkboxes if no users are selected
     }
-  }
+  }, [showCheckboxes, selectedUsers]);
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleClickOutside]);
+
+  const longPressProps = useLongPress(() => {
+    if (!showCheckboxes) {
+      setShowCheckboxes(true);
+      toast.info("Selection mode activated", {
+        autoClose: 2000,
+        position: "bottom-center"
+      });
     }
-  }, [selectedUsers])
+  }, 500);
 
   // Filter Users
   const filteredUsers = users.filter(
@@ -101,18 +83,6 @@ export default function UserManagement() {
         (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))) &&
       (roleFilter === "all" || roleFilter === "" || user.role === roleFilter)
   )
-
-  // Check if all users are selected
-  const isAllSelected = filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length
-
-  // Handle "Select All" checkbox
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedUsers([]) // Deselect all
-    } else {
-      setSelectedUsers(filteredUsers.map((user) => user.id)) // Select all
-    }
-  }
 
   // Fetch users from API
   useEffect(() => {
@@ -134,59 +104,53 @@ export default function UserManagement() {
 
   // Handle User Form Submission
   const handleUserFormSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    // Validate Confirm Password
     if (!userForm.id && userForm.password !== userForm.confirm_password) {
-      toast.error("Passwords do not match.");
-      return;
+      toast.error("Passwords do not match.")
+      return
     }
 
-    // Proceed with saving the user
     showConfirmationDialog(
       "Save Changes",
       `Are you sure you want to ${userForm.id ? "update" : "add"} this user?`,
       async () => {
-        setIsLoading(true);
+        setIsLoading(true)
 
         try {
-          const hashedPassword = userForm.password
-            ? await bcrypt.hash(userForm.password, 10)
-            : undefined;
-
           const payload = {
             ...userForm,
-            password: hashedPassword,
-          };
+            password: userForm.password,
+          }
 
-          const url = userForm.id ? `/users/${userForm.id}/` : `/users/`;
-          const method = userForm.id ? "put" : "post";
+          const url = userForm.id ? `/users/${userForm.id}/` : `/users/`
+          const method = userForm.id ? "put" : "post"
 
           const response = await api({
             url,
             method,
             data: payload,
-          });
+          })
 
-          const data = response.data;
+          const data = response.data
           if (userForm.id) {
-            setUsers(users.map((user) => (user.id === userForm.id ? data : user)));
+            setUsers(users.map((user) => (user.id === userForm.id ? data : user)))
           } else {
-            setUsers([...users, data]);
+            setUsers([...users, data])
           }
 
-          toast.success(`User ${userForm.id ? "updated" : "added"} successfully!`);
-          setIsUserModalOpen(false);
-          resetUserForm();
+          toast.success(`User ${userForm.id ? "updated" : "added"} successfully!`)
+          setIsUserModalOpen(false)
+          resetUserForm()
         } catch (error) {
-          console.error("User save error:", error.response?.data || error);
-          toast.error("Failed to save user.");
+          console.error("User save error:", error.response?.data || error)
+          toast.error("Failed to save user.")
         } finally {
-          setIsLoading(false);
+          setIsLoading(false)
         }
       }
-    );
-  };
+    )
+  }
 
   // Reset user form to default values
   const resetUserForm = () => {
@@ -211,7 +175,7 @@ export default function UserManagement() {
       title,
       message,
       onConfirm,
-    });
+    })
   }
 
   // Archive User
@@ -220,25 +184,25 @@ export default function UserManagement() {
       "Archive User",
       "Are you sure you want to archive this user?",
       () => confirmArchive(id)
-    );
-  };
+    )
+  }
 
   const confirmArchive = async (id) => {
     try {
-      const response = await api.patch(`/users/${id}/`, { status: "archived" });
-      const updatedUser = response.data;
-      setUsers(users.map((user) => (user.id === id ? updatedUser : user)));
-      toast.success("User archived successfully!");
+      const response = await api.patch(`/users/${id}/`, { status: "archived" })
+      const updatedUser = response.data
+      setUsers(users.map((user) => (user.id === id ? updatedUser : user)))
+      toast.success("User archived successfully!")
     } catch (error) {
-      console.error("Archive error:", error.response || error);
+      console.error("Archive error:", error.response || error)
       const errorMsg =
         error.response?.data?.message ||
         error.response?.data?.detail ||
         error.message ||
-        "Failed to archive user";
-      toast.error(errorMsg);
+        "Failed to archive user"
+      toast.error(errorMsg)
     }
-  };
+  }
 
   // Unarchive User
   const handleUnarchiveUser = (id) => {
@@ -246,71 +210,23 @@ export default function UserManagement() {
       "Unarchive User",
       "Are you sure you want to unarchive this user?",
       () => confirmUnarchive(id)
-    );
-  };
+    )
+  }
 
   const confirmUnarchive = async (id) => {
     try {
-      const response = await api.patch(`/users/${id}/`, { status: "active" });
-      const updatedUser = response.data;
-      setUsers(users.map((user) => (user.id === id ? updatedUser : user)));
-      toast.success("User unarchived successfully!");
+      const response = await api.patch(`/users/${id}/`, { status: "active" })
+      const updatedUser = response.data
+      setUsers(users.map((user) => (user.id === id ? updatedUser : user)))
+      toast.success("User unarchived successfully!")
     } catch (error) {
-      console.error("Unarchive error:", error.response || error);
+      console.error("Unarchive error:", error.response || error)
       const errorMsg =
         error.response?.data?.message ||
         error.response?.data?.detail ||
         error.message ||
-        "Failed to unarchive user";
-      toast.error(errorMsg);
-    }
-  };
-
-  // Export Users to CSV
-  const exportUsers = () => {
-    try {
-      if (selectedUsers.length === 0) {
-        toast.error("No users selected for export.")
-        return
-      }
-
-      const now = new Date()
-      const date = now.toISOString().split("T")[0]
-      const time = now.toTimeString().split(" ")[0].replace(/:/g, "-")
-
-      const headers = ["ID", "Username", "First Name", "Last Name", "Email", "Phone", "Role", "Status"]
-      const csvContent =
-        "data:text/csv;charset=utf-8," +
-        headers.join(",") +
-        "\n" +
-        filteredUsers
-          .filter((user) => selectedUsers.includes(user.id))
-          .map((user) => {
-            const escapedEmail = `"${user.email}"`
-            return [
-              user.id,
-              user.username,
-              user.first_name,
-              user.last_name,
-              escapedEmail,
-              user.phone_number,
-              user.role,
-              user.status,
-            ].join(",")
-          })
-          .join("\n")
-
-      const encodedUri = encodeURI(csvContent)
-      const link = document.createElement("a")
-      link.setAttribute("href", encodedUri)
-      link.setAttribute("download", `users_export_${date}_${time}.csv`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
-      toast.success("User data exported successfully!")
-    } catch (error) {
-      toast.error(`Failed to export user data: ${error.message || "Unknown error"}`)
+        "Failed to unarchive user"
+      toast.error(errorMsg)
     }
   }
 
@@ -318,29 +234,54 @@ export default function UserManagement() {
   const generatePDF = (user) => {
     const doc = new jsPDF()
 
-    // Add title
-    doc.setFontSize(18)
-    doc.text("User Information", 10, 10)
+    doc.setFontSize(22)
+    doc.setFont("helvetica", "bold")
+    doc.text("K-TO-DRINKS TRADING", 105, 15, { align: "center" })
 
-    // Add user details
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "italic")
+    doc.text("User Information Report", 105, 25, { align: "center" })
+
+    doc.setLineWidth(0.5)
+    doc.line(55, 30, 155, 30)
+
     doc.setFontSize(12)
-    doc.text(`ID: ${user.id}`, 10, 20)
-    doc.text(`Username: ${user.username}`, 10, 30)
-    doc.text(`Full Name: ${user.first_name} ${user.last_name}`, 10, 40)
-    doc.text(`Email: ${user.email || "No email added"}`, 10, 50)
-    doc.text(`Phone: ${user.phone_number}`, 10, 60)
-    doc.text(`Role: ${getRoleDisplayName(user.role)}`, 10, 70)
-    doc.text(`Status: ${user.status}`, 10, 80)
+    doc.setFont("helvetica", "normal")
+    const userDetails = [
+      { label: "ID", value: user.id },
+      { label: "Username", value: user.username },
+      { label: "Full Name", value: `${user.first_name} ${user.last_name}` },
+      { label: "Email", value: user.email || "No email added" },
+      { label: "Phone", value: user.phone_number },
+      { label: "Role", value: getRoleDisplayName(user.role) },
+      { label: "Status", value: user.status },
+      {
+        label: "Date Joined",
+        value: user.date_joined
+          ? new Date(user.date_joined).toLocaleDateString("en-US")
+          : "N/A",
+      },
+    ]
+
+    let yPosition = 40
+    userDetails.forEach((detail) => {
+      doc.setFont("helvetica", "bold")
+      doc.text(`${detail.label}:`, 60, yPosition)
+      doc.setFont("helvetica", "normal")
+      doc.text(`${detail.value}`, 100, yPosition)
+      yPosition += 10
+    })
+
+    doc.setFontSize(10)
+    doc.setFont("helvetica", "italic")
     doc.text(
-      `Date Joined: ${
-        user.date_joined ? new Date(user.date_joined).toLocaleDateString("en-US") : "N/A"
-      }`,
-      10,
-      90
+      "Generated by K-To-Drinks User Management System",
+      105,
+      280,
+      { align: "center" }
     )
 
-    // Save the PDF
-    doc.save(`user_${user.username || user.id}.pdf`)
+    window.open(doc.output("bloburl"), "_blank")
   }
 
   // Utility Functions
@@ -374,329 +315,173 @@ export default function UserManagement() {
     )
   }
 
-  // Get role display name
   const getRoleDisplayName = (role) => {
     switch (role) {
       case "admin":
-        return "Admin";
+        return "Admin"
       case "employee":
-        return "Employee";
+        return "Employee"
       default:
-        return "Unknown Role";
+        return "Unknown Role"
     }
   }
+
+  // Define table columns
+  const columns = [
+    {
+      key: "username",
+      header: "Username",
+      sortable: true,
+      className: "font-medium"
+    },
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      render: (user) => `${user.first_name} ${user.last_name}`
+    },
+    {
+      key: "email",
+      header: "Email",
+      sortable: true,
+    },
+    {
+      key: "phone_number",
+      header: "Phone Number",
+      sortable: true,
+      render: (user) => user.phone_number || "N/A"
+    },
+    {
+      key: "role",
+      header: "Role",
+      sortable: true,
+      render: (user) => (
+        <Badge variant="outline" className="capitalize">
+          {getRoleDisplayName(user.role)}
+        </Badge>
+      )
+    },
+    {
+      key: "actions",
+      header: "", // Remove the "Actions" text by setting header to empty string
+      className: "text-right",
+      render: (user) => (
+        <div className="flex justify-end gap-4">
+          <button
+            className="action-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              openUserModal(user);
+            }}
+            title="Edit"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            className="action-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (user.status === "active") {
+                handleArchiveUser(user.id);
+              } else {
+                handleUnarchiveUser(user.id);
+              }
+            }}
+            title={user.status === "active" ? "Archive" : "Restore"}
+          >
+            {user.status === "active" ? (
+              <Archive className="h-4 w-4" />
+            ) : (
+              <ArchiveRestore className="h-4 w-4" />
+            )}
+          </button>
+          <button
+            className="action-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewUser(user);
+            }}
+            title="View"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+        </div>
+      )
+    }
+  ]
 
   return (
     <Card className="user-management-card">
       <CardHeader className="card-header">
         <div className="header-container">
-          <CardTitle className="card-title">User Management</CardTitle>
+          <div className="search-input-container w-[400px]"> {/* Add fixed width here */}
+            <Search className="search-icon" />
+            <Input 
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={handleSearch}
+              onFocus={handleFocus}
+              ref={inputRef}
+              className="search-input"
+            />
+          </div>
           <div className="button-group">
             <Button onClick={() => openUserModal()} size="sm" className="add-button">
               <UserPlus className="icon" />
               Add User
             </Button>
-            {selectedUsers.length > 0 && (
-              <Button onClick={exportUsers} variant="outline" size="sm" className="export-button">
-                <Download className="icon" />
-                Export
-              </Button>
-            )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="card-content">
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="tabs-container">
           <div className="filter-container">
-            <TabsList className="tabs-list">
-              <TabsTrigger value="active" className="tab">
-                Active Users
-              </TabsTrigger>
-              <TabsTrigger value="archived" className="tab">
-                Archived Users
-              </TabsTrigger>
-            </TabsList>
-            <div className="search-container">
-              <div className="search-input-container">
-                <Search className="search-icon" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  onFocus={handleFocus}
-                  ref={inputRef}
-                  className="search-input"
-                />
-              </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter} className="role-select">
-                <SelectTrigger className="select-trigger">
+            <div className="flex justify-between items-center w-full">
+              <TabsList className="tabs-list">
+                <TabsTrigger value="active" className="tab">
+                  Active Users
+                </TabsTrigger>
+                <TabsTrigger value="archived" className="tab">
+                  Archived Users
+                </TabsTrigger>
+                <Select value={roleFilter} onValueChange={setRoleFilter} className="role-select">
+                <SelectTrigger className="select-trigger w-[160px]">
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
                 <SelectContent className="select-content">
                   <SelectItem value="all" className="select-item">
                     All Roles
                   </SelectItem>
-                  <SelectItem value="manager" className="select-item">
-                    Manager
-                  </SelectItem>
-                  <SelectItem value="delivery_driver" className="select-item">
-                    Delivery Driver
+                  <SelectItem value="admin" className="select-item">
+                    Admin
                   </SelectItem>
                   <SelectItem value="employee" className="select-item">
                     Employee
                   </SelectItem>
                 </SelectContent>
               </Select>
+              </TabsList>
             </div>
           </div>
 
-          <div className="status-container">
-            <div className="status-content">
-              <div className="status-text">
-                {isLoading ? (
-                  <span>Loading users...</span>
-                ) : (
-                  <span>
-                    Showing <strong>{filteredUsers.length}</strong> of{" "}
-                    <strong>
-                      {
-                        users.filter((user) =>
-                          activeTab === "archived" ? user.status === "archived" : user.status === "active"
-                        ).length
-                      }
-                    </strong>{" "}
-                    {activeTab} users
-                  </span>
-                )}
-              </div>
-            </div>
+          <div {...longPressProps} className="table-wrapper">
+            <DataTable
+              columns={columns}
+              data={filteredUsers}
+              isLoading={isLoading}
+              showCheckboxes={showCheckboxes}
+              selectedItems={selectedUsers}
+              onSelectionChange={(selected) => {
+                setSelectedUsers(selected);
+              }}
+              emptyMessage={
+                searchTerm || roleFilter
+                  ? "No users match the current filters"
+                  : "No users found"
+              }
+              loadingMessage="Loading users..."
+            />
           </div>
-
-          <TabsContent value="active" className="tab-content">
-            <div className="table-container">
-              <Table className="user-table" ref={tableRef}>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-center">
-                      {showCheckboxes && ( // Only show "Select All" checkbox if `showCheckboxes` is true
-                        <input
-                          type="checkbox"
-                          checked={isAllSelected}
-                          onChange={handleSelectAll}
-                          aria-label="Select all users"
-                        />
-                      )}
-                    </TableHead>
-                    <TableHead className="text-center">Username</TableHead>
-                    <TableHead className="text-center">Full Name</TableHead>
-                    <TableHead className="email-column text-center">Email</TableHead>
-                    <TableHead className="text-center">Phone</TableHead>
-                    <TableHead className="text-center">Role</TableHead>
-                    <TableHead className="text-center">Date Added</TableHead>
-                    <TableHead className="actions-column text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="loading-cell text-center">
-                        <div className="loading-indicator flex justify-center items-center">
-                          <RefreshCcw className="loading-icon" />
-                          Loading users...
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="empty-cell text-center">
-                        No users found matching your criteria
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredUsers.map((user) => (
-                      <TableRow
-                        key={user.id}
-                        onMouseDown={() => handleLongPressStart(user.id)}
-                        onMouseUp={handleLongPressEnd}
-                        onMouseLeave={handleLongPressEnd}
-                        onTouchStart={() => handleLongPressStart(user.id)}
-                        onTouchEnd={handleLongPressEnd}
-                      >
-                        <TableCell className="text-center">
-                          {showCheckboxes && (
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(user.id)}
-                              onChange={() => handleCheckboxChange(user.id)}
-                              aria-label={`Select user ${user.username}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">{user.username}</TableCell>
-                        <TableCell className="text-center">
-                          {`${capitalizeEachWord(user.first_name)} ${capitalizeEachWord(user.last_name)}`}
-                        </TableCell>
-                        <TableCell className="email-cell text-center">
-                          {user.email ? user.email : "No email added"}
-                        </TableCell>
-                        <TableCell className="text-center">{user.phone_number}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="role-badge mx-auto">
-                            {getRoleDisplayName(user.role)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {user.date_joined ? new Date(user.date_joined).toLocaleDateString("en-US") : "N/A"}
-                        </TableCell>
-                        <TableCell className="actions-cell text-center border border-gray-200 px-4 py-2">
-                          <div className="actions-container flex justify-center gap-2 flex-wrap">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setViewUser(user)} // Set the user to view
-                              className="action-button"
-                            >
-                              <Eye className="action-icon" />
-                              <span className="sr-only">View</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openUserModal(user)}
-                              className="action-button"
-                            >
-                              <Edit className="action-icon" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleArchiveUser(user.id)}
-                              className="action-button"
-                            >
-                              <Archive className="action-icon" />
-                              <span className="sr-only">Archive</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="archived" className="tab-content">
-            <div className="table-container">
-              <Table className="user-table" ref={tableRef}>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-center">
-                      {showCheckboxes && ( // Only show "Select All" checkbox if `showCheckboxes` is true
-                        <input
-                          type="checkbox"
-                          checked={
-                            filteredUsers.length > 0 &&
-                            selectedUsers.length === filteredUsers.length
-                          }
-                          onChange={handleSelectAll}
-                          aria-label="Select all archived users"
-                        />
-                      )}
-                    </TableHead>
-                    <TableHead className="text-center">Username</TableHead>
-                    <TableHead className="text-center">Full Name</TableHead>
-                    <TableHead className="email-column text-center">Email</TableHead>
-                    <TableHead className="text-center">Phone</TableHead>
-                    <TableHead className="text-center">Role</TableHead>
-                    <TableHead className="text-center">Date Added</TableHead>
-                    <TableHead className="actions-column text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="loading-cell text-center">
-                        <div className="loading-indicator flex justify-center items-center">
-                          <RefreshCcw className="loading-icon" />
-                          Loading users...
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="empty-cell text-center">
-                        No archived users found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredUsers.map((user) => (
-                      <TableRow
-                        key={user.id}
-                        onMouseDown={() => handleLongPressStart(user.id)}
-                        onMouseUp={handleLongPressEnd}
-                        onMouseLeave={handleLongPressEnd}
-                        onTouchStart={() => handleLongPressStart(user.id)}
-                        onTouchEnd={handleLongPressEnd}
-                      >
-                        <TableCell className="text-center">
-                          {showCheckboxes && (
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(user.id)}
-                              onChange={() => handleCheckboxChange(user.id)}
-                              aria-label={`Select archived user ${user.username}`}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">{user.username}</TableCell>
-                        <TableCell className="text-center">
-                          {`${capitalizeEachWord(user.first_name)} ${capitalizeEachWord(user.last_name)}`}
-                        </TableCell>
-                        <TableCell className="email-cell text-center">
-                          {user.email ? user.email : "No email added"}
-                        </TableCell>
-                        <TableCell className="text-center">{user.phone_number}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline" className="role-badge mx-auto">
-                            {getRoleDisplayName(user.role)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {user.date_joined
-                            ? new Date(user.date_joined).toLocaleDateString("en-US")
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell className="actions-cell text-center">
-                          <div className="actions-container flex justify-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setViewUser(user)} // Set the user to view
-                              className="action-button"
-                            >
-                              <Eye className="action-icon" />
-                              <span className="sr-only">View</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleUnarchiveUser(user.id)}
-                              className="restore-button mx-auto"
-                            >
-                              <RefreshCcw className="action-icon" />
-                              Restore
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
         </Tabs>
 
         {isUserModalOpen && (
@@ -804,7 +589,7 @@ export default function UserManagement() {
                     value={userForm.password}
                     onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                     placeholder="Enter password"
-                    required={!userForm.id} // Required only for new users
+                    required={!userForm.id}
                     className="form-input"
                   />
                 </div>
@@ -819,7 +604,7 @@ export default function UserManagement() {
                     value={userForm.confirm_password || ""}
                     onChange={(e) => setUserForm({ ...userForm, confirm_password: e.target.value })}
                     placeholder="Confirm password"
-                    required={!userForm.id} // Required only for new users
+                    required={!userForm.id}
                     className="form-input"
                   />
                 </div>
@@ -869,7 +654,7 @@ export default function UserManagement() {
               </div>
               <div className="modal-actions">
                 <Button onClick={() => generatePDF(viewUser)} variant="outline" size="sm">
-                  Download PDF
+                  Print PDF
                 </Button>
                 <Button onClick={() => setViewUser(null)} variant="outline" size="sm">
                   Close
@@ -879,7 +664,6 @@ export default function UserManagement() {
           </div>
         )}
 
-        {/* Confirmation Dialog */}
         {confirmationDialog.isOpen && (
           <div className="custom-modal-overlay">
             <div className="custom-modal confirmation-modal">
@@ -897,8 +681,8 @@ export default function UserManagement() {
                 </button>
                 <button
                   onClick={() => {
-                    confirmationDialog.onConfirm();
-                    setConfirmationDialog((prev) => ({ ...prev, isOpen: false }));
+                    confirmationDialog.onConfirm()
+                    setConfirmationDialog((prev) => ({ ...prev, isOpen: false }))
                   }}
                   className="confirm-button"
                 >

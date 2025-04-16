@@ -180,10 +180,11 @@
 
 /* User profile in dropdown */
 .user-profile {
-  padding: 16px !important;
-  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
   cursor: default !important;
 }
 
@@ -219,6 +220,67 @@
 
 .logout-item .nav-icon {
   color: #f44336 !important;
+}
+
+/* Menu trigger */
+.menu-trigger {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 9999px;
+  transition: all 0.2s;
+}
+
+.menu-trigger:hover {
+  background-color: var(--accent);
+}
+
+.menu-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Dark mode styles for Avatar fallback */
+.dark [data-slot="avatar-fallback"] {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Avatar upload */
+.avatar-upload {
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-upload:hover::after {
+  content: "Change";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.avatar-upload:hover .Avatar {
+  opacity: 0.8;
+}
+
+/* Loading state styles */
+.menu-trigger.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.menu-trigger .Avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.user-profile .Avatar {
+  width: 40px;
+  height: 40px;
 }
 
 /* Responsive adjustments */

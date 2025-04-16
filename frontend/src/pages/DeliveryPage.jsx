@@ -278,10 +278,6 @@ export default function DeliveryPage() {
 
   return (
     <div className="delivery-page">
-      <div className="delivery-header">
-        <h1>Delivery Management</h1>
-        <p>Track and manage all deliveries</p>
-      </div>
 
       <div className="delivery-filters">
         <div className="search-bar">

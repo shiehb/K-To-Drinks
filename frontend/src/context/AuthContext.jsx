@@ -8,11 +8,19 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+import PropTypes from "prop-types";
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error("Error parsing stored user:", error);
+      return null;
+    }
   });
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [darkMode, setDarkMode] = useState(() => {
@@ -27,10 +35,14 @@ export const AuthProvider = ({ children }) => {
 
   const toggleDarkMode = () => setDarkMode(prev => !prev);
 
-  // Stable JWT parser
+  // Enhanced JWT parser with consistent user data structure
   const parseJwt = useCallback((token) => {
     try {
+      if (!token) return null;
+      
       const base64Url = token.split(".")[1];
+      if (!base64Url) return null;
+      
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
       const jsonPayload = decodeURIComponent(
         atob(base64)
@@ -38,53 +50,59 @@ export const AuthProvider = ({ children }) => {
           .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
           .join("")
       );
-      return JSON.parse(jsonPayload);
+      
+      const decoded = JSON.parse(jsonPayload);
+      
+      return {
+        id: decoded.user_id || null,
+        username: decoded.username || "",
+        first_name: decoded.first_name || "",
+        last_name: decoded.last_name || "",
+        role: decoded.role || "employee",
+        ...decoded
+      };
     } catch (e) {
       console.error("JWT parsing error:", e);
       return null;
     }
   }, []);
 
-  // Stable auth check with dependency optimization
-  const checkAuth = useCallback(async () => {
+  // Initialize auth state on mount
+  const initializeAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
-      if (!token) return false;
+      if (!token) return;
 
       const userData = parseJwt(token);
-      if (!userData) return false;
-
-      const newUser = {
-        username: userData.username || `user_${userData.user_id}`,
-        firstName: userData.first_name || "",
-        lastName: userData.last_name || "",
-      };
-
-      // Only update if user data has changed
-      if (JSON.stringify(newUser) !== JSON.stringify(user)) {
-        setUser(newUser);
-        localStorage.setItem("user", JSON.stringify(newUser));
+      if (!userData) {
+        console.warn("No valid user data in token");
+        return;
       }
 
-      return true;
-    } catch (error) {
-      console.error("Auth check error:", error);
-      return false;
-    }
-  }, [user, parseJwt]);
+      const newUser = {
+        id: userData.id,
+        username: userData.username,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        role: userData.role
+      };
 
-  // Initialize auth state once on mount
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
+    } catch (error) {
+      console.error("Auth initialization error:", error);
+    }
+  }, [parseJwt]);
+
   useEffect(() => {
-    const initializeAuth = async () => {
-      await checkAuth();
-    };
     initializeAuth();
-  }, [checkAuth]);
+  }, [initializeAuth]);
 
   const clearAuthData = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
+    setUser(null);
   };
 
   const login = async (credentials) => {
@@ -101,11 +119,18 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("access_token", response.data.access);
         localStorage.setItem("refresh_token", response.data.refresh);
 
-        const userData = parseJwt(response.data.access);
+        // Get user data and profile from the response
+        const userData = response.data.user;
+        
         const newUser = {
-          username: userData.username || credentials.username,
-          firstName: userData.first_name || "",
-          lastName: userData.last_name || "",
+          id: userData.id,
+          username: userData.username,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          email: userData.email,
+          role: userData.role,
+          status: userData.status,
+          avatarUrl: userData.profile?.avatar || null // Add avatar URL
         };
 
         setUser(newUser);
@@ -119,7 +144,7 @@ export const AuthProvider = ({ children }) => {
       const errorMsg =
         error.response?.data?.detail ||
         error.message ||
-        "Login failed";
+        "Login failed. Please check your credentials.";
       setError(errorMsg);
       toast.error(errorMsg);
       return false;
@@ -134,6 +159,42 @@ export const AuthProvider = ({ children }) => {
     toast.info("Logged out successfully");
   };
 
+  const checkAuth = useCallback(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return false;
+    
+    const userData = parseJwt(token);
+    return !!userData;
+  }, [parseJwt]);
+
+  // Add function to update avatar
+  const updateAvatar = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);  // Changed from 'profile.avatar' to 'avatar'
+
+      const response = await api.put(`/users/profile/avatar/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data?.avatar_url) {
+        const updatedUser = {
+          ...user,
+          avatarUrl: response.data.avatar_url
+        };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -144,10 +205,15 @@ export const AuthProvider = ({ children }) => {
       checkAuth,
       darkMode,
       toggleDarkMode,
+      updateAvatar, // Add updateAvatar to context
     }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 export default AuthProvider;

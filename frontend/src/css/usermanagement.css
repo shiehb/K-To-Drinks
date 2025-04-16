@@ -99,16 +99,15 @@
 
 /* Card content - Improved for scrolling */
 .card-content {
-  padding: 0.75rem 1rem;
+  padding: 1rem;
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 /* Tabs and filters - More compact */
 .tabs-container {
-  width: 100%;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -116,12 +115,9 @@
 
 .filter-container {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 @media (min-width: 640px) {
@@ -169,7 +165,8 @@
 
 .search-input-container {
   position: relative;
-  width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 @media (min-width: 640px) {
@@ -180,15 +177,14 @@
 
 .search-icon {
   position: absolute;
-  left: 0.5rem;
-  top: 0.625rem;
-  width: 1rem;
-  height: 1rem;
-  color: var(--text-color);
+  left: 10px;
+  color: #6b7280;
+  height: 16px;
+  width: 16px;
 }
 
 .search-input {
-  padding-left: 2rem;
+  padding-left: 35px;
   width: 100%;
   height: 2.25rem;
   font-size: 0.875rem;
@@ -314,7 +310,14 @@
 }
 
 /* Table styles - Improved for scrolling */
+.table-wrapper {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .table-container {
+  position: relative;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   overflow: hidden;
@@ -584,10 +587,9 @@
 /* Confirmation dialog - Z-index fixes */
 .confirmation-dialog {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,6 +605,7 @@
   max-width: 400px;
   box-shadow: 0 10px 25px var(--shadow-color);
   border: 1px solid var(--border-color);
+  text-align: center; /* Center text inside the dialog */
 }
 
 .confirmation-title {
@@ -645,73 +648,18 @@
   border: none;
 }
 
-/* Scrollbar styling */
-.card-content::-webkit-scrollbar,
-.dialog-content::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.card-content::-webkit-scrollbar-track,
-.dialog-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.card-content::-webkit-scrollbar-thumb,
-.dialog-content::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 20px;
-}
-
-.card-content::-webkit-scrollbar-thumb:hover,
-.dialog-content::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-  .card-title {
-    font-size: 1.125rem;
-  }
-
-  .action-button,
-  .restore-button {
-    padding: 0.25rem;
-  }
-
-  .action-icon {
-    margin-right: 0;
-  }
-
-  .action-button span,
-  .restore-button span {
-    display: none;
-  }
-
-  .card-header,
-  .card-content {
-    padding: 0.625rem 0.75rem;
-  }
-
-  .filter-container,
-  .status-container {
-    margin-bottom: 0.5rem;
-  }
-}
-
-/* Modal Overlay */
+/* Center the Confirmation Dialog */
 .custom-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5); /* Dim background */
   z-index: 1000;
-  backdrop-filter: blur(2px);
 }
 
 /* Modal Container */
@@ -1023,6 +971,80 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* User Information Modal */
+.user-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-details p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-color);
+}
+
+.user-details strong {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.modal-actions button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+/* Checkbox Styles */
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.selected-count {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 

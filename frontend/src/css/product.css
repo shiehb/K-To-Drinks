@@ -1,214 +1,285 @@
-/* Align the header container */
-.header-container {
+/* Main Container */
+.product-container {
+  padding: 1.5rem;
   display: flex;
-  justify-content: space-between; /* Pushes the title to the left and the button to the right */
-  align-items: center;
-  margin-bottom: 16px; /* Adds spacing below the header */
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Add Button */
-.add-button {
-  display: inline-flex;
+/* Header Section with Title and Add Button */
+.header-section {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: var(--primary-color);
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.add-button {
+  background-color: #c23a25;
   color: white;
+  border: none;
+  border-radius: 4px;
   padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
   font-weight: 500;
-  min-width: fit-content;
-  white-space: nowrap;
+  font-size: 0.875rem;
+  @apply bg-primary text-white hover:bg-primary/90;
 }
 
 .add-button:hover {
-  background-color: var(--primary-hover);
+  background-color: #a73220;
 }
 
-/* Tabs Header */
-.tabs-header {
+/* Content Section */
+.content-section {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+}
+
+/* Tabs and Search Row */
+.tabs-search-row {
   display: flex;
-  justify-content: space-between; /* Align tabs to the left and search to the right */
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px; /* Add spacing below the row */
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* Tabs List */
-.tabs-list {
+/* Tab Buttons */
+.tab-buttons {
   display: flex;
-  gap: 16px; /* Add spacing between tabs */
+  gap: 0.5rem;
 }
 
-/* Search Container */
-.search-container {
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: transparent;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #4a5568;
+}
+
+.tab-button.active-tab {
+  background-color: #c23a25;
+  color: white;
+}
+
+/* Search and Filter Section */
+.search-filter-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px; /* Add spacing between the search icon and input */
+  @apply relative;
 }
 
 .search-icon {
-  color: var(--muted-text);
+  position: absolute;
+  left: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  color: #a0aec0;
 }
 
 .search-input {
-  width: 250px; /* Set a fixed width for the search input */
-  padding: 8px;
-  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border: 1px solid #e2e8f0;
   border-radius: 4px;
   font-size: 0.875rem;
-  background-color: var(--background-color);
-  color: var(--text-primary);
-  transition: border-color var(--transition-speed) ease;
+  min-width: 250px;
+  @apply pl-8 w-[300px];
 }
 
 .search-input:focus {
-  border-color: var(--primary-color);
   outline: none;
+  border-color: #c23a25;
+}
+
+/* Products Count */
+.products-count {
+  padding: 0.75rem 1rem;
+  color: #718096;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 /* Table Styles */
-.product-table {
+.table-container {
+  overflow-x: auto;
+  @apply border rounded-md;
+}
+
+.products-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto; /* Allows columns to adjust based on content */
-  margin-top: 16px;
-  border: 1px solid var(--border-color);
+  @apply w-full;
 }
 
-/* Table Header Styles */
-.product-table th {
-  background-color: var(--primary-color);
-  font-weight: bold;
-  text-align: center; /* Center-aligns the header text */
-  color: #ffffff; /* White text for better contrast */
-  padding: 12px;
-  position: relative;
-  border: 1px solid var(--primary-hover);
+.products-table th {
+  background-color: #c23a25;
+  color: white;
+  text-align: left;
+  padding: 0.75rem 1rem;
 }
 
-/* Optional: Add hover effect on header */
-.product-table th:hover {
-  background-color: var(--primary-hover);
+.products-table th:first-child {
+  border-top-left-radius: 4px;
 }
 
-.product-table td {
-  padding: 12px;
-  text-align: center; /* Center-aligns the cell text */
-  border: 1px solid var(--border-color);
-  vertical-align: middle; /* Aligns content vertically in the middle */
-  word-wrap: break-word; /* Ensures long text wraps within the cell */
-  color: var(--text-secondary);
-  background-color: var(--background-color);
+.products-table th:last-child {
+  border-top-right-radius: 4px;
 }
 
-/* Actions Column Styles */
-.actions-cell, 
-.product-table th:last-child {
-  width: 150px; /* Set fixed width for actions column */
-  padding: 8px;
-  white-space: nowrap;
-  justify-content: center; /* Center-aligns the actions */
-  text-align: center;
-}
-
-/* Actions Container */
-.actions-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-/* Action Buttons */
-.action-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  background-color: transparent;
-}
-
-/* Restore Button */
-.restore-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  white-space: nowrap;
-  min-width: fit-content;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  transition: all 0.2s ease;
-}
-
-.restore-button:hover {
-  background-color: var(--primary-color);
-  color: var(--stext-color);
-  transform: translateY(-1px);
-}
-
-.restore-button .action-icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* Action Icon */
-.action-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* Badge Styles */
-.badge {
-  display: inline-block;
-  padding: 4px 8px;
-  background-color: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+.products-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.875rem;
 }
 
-/* Loading Indicator */
-.loading-indicator {
+/* Action Buttons */
+.action-buttons {
   display: flex;
+  gap: 0.5rem;
   justify-content: center;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted-text);
-  font-style: italic;
+  @apply flex justify-center gap-2;
 }
 
-/* Responsive Design */
+.icon-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.icon-button:hover {
+  background-color: #f7fafc;
+}
+
+.icon-small {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Stock Badge */
+.stock-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+/* Empty Message */
+.empty-message {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+/* Product Details in Dialog */
+.product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.product-details h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.product-details p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .header-container {
+  .tabs-search-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 1rem;
   }
-
-  .search-container {
+  
+  .search-filter-section {
     width: 100%;
-    justify-content: flex-end;
   }
-
+  
+  .search-wrapper {
+    width: 100%;
+  }
+  
   .search-input {
-    width: 100%; /* Make the search input take full width on smaller screens */
+    width: 100%;
+    min-width: auto;
   }
+}
 
-  .product-table th,
-  .product-table td {
-    font-size: 0.75rem; /* Reduce font size for smaller screens */
-    padding: 8px;
-  }
+.product-management-card {
+  @apply h-full;
+}
 
-  .add-button {    width: auto; /* Allow the button to adjust its width */
-  }
+.header-container {
+  @apply flex items-center justify-between mb-4;
+}
+
+.button-group {
+  @apply flex gap-2;
+}
+
+.actions-container {
+  @apply flex justify-center gap-2;
+}
+
+.action-button {
+  @apply h-8 w-8 p-0;
+}
+
+.action-icon {
+  @apply h-4 w-4;
+}
+
+.product-table {
+  @apply w-full;
+}
+
+.status-container {
+  @apply py-2;
+}
+
+.status-text {
+  @apply text-sm text-gray-500;
+}
+
+.filter-container {
+  @apply flex items-center justify-between mb-4;
+}
+
+.tabs-list {
+  @apply bg-background;
+}
+
+.tab {
+  @apply px-4;
 }

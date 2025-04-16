@@ -1,7 +1,8 @@
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, UserCreateSerializer, UserProfileSerializer
 from .models import UserProfile
@@ -115,3 +116,39 @@ class UserProfileView(APIView):
         
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_avatar(request):
+    """Handle avatar upload for user profile"""
+    try:
+        profile = request.user.profile
+        if 'avatar' not in request.FILES:
+            return Response(
+                {'error': 'No avatar file provided'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Delete old avatar if it exists
+        if profile.avatar:
+            profile.avatar.delete()
+
+        profile.avatar = request.FILES['avatar']
+        profile.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Avatar updated successfully',
+            'avatar_url': request.build_absolute_uri(profile.avatar.url)
+        })
+    except Exception as e:
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
