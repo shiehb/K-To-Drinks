@@ -1,59 +1,53 @@
-import axios from 'axios'
+// api_url.js
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
-const BASE_URL = 'http://localhost:8000/api'
+// API Base URL
+const BASE_URL = 'http://localhost:8000/api';
 
-// Define API endpoints
+// Define endpoints
 export const ENDPOINTS = {
+  USERS: '/users',
   STORES: '/stores',
-  AUTH: '/auth',
-  USERS: '/users'
-}
+  PRODUCTS: '/products/products/', // Make sure this matches your Django URL pattern
+  CATEGORIES: '/products/categories/',
+  SUPPLIERS: '/products/suppliers/',
+  INVENTORY: '/inventory',
+  ORDERS: '/orders',
+  DELIVERIES: '/deliveries'
+};
 
+// Create axios instance
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-  }
-})
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  
-  // Log request details for debugging
-  console.log('API Request:', {
-    url: config.url,
-    method: config.method,
-    params: config.params,
-    headers: config.headers
-  })
-  
-  return config
-})
-
-api.interceptors.response.use(
-  (response) => {
-    // Log successful response
-    console.log('API Response:', response.data)
-    return response
   },
-  (error) => {
-    // Log error details
-    console.error('API Error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    })
-    
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
-      window.location.href = '/login'
+});
+
+// Add request interceptor for authentication
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error)
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add response interceptor for handling auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized access
+      toast.error("Session expired. Please login again.");
+      // Redirect to login or refresh token
+    }
+    return Promise.reject(error);
   }
-)
+);
 
-export default api
-
+export default api;

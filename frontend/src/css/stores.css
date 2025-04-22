@@ -53,7 +53,21 @@
 }
 
 .icon {
-  height: 1rem;
-  width: 1rem;
   margin-right: 0.5rem;
+  width: 16px;
+  height: 16px;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.map-button {
+  background-color: #4b5563;
+}
+
+.map-button:hover {
+  background-color: #374151;
 }

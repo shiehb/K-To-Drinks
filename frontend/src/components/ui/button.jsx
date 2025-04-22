@@ -23,14 +23,20 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 min-w-[120px] max-w-[200px]",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
       },
+      width: {
+        auto: "w-auto",
+        full: "w-full",
+        fixed: "min-w-[120px] max-w-[200px]"
+      }
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      width: "auto"
     },
   }
 )
@@ -39,6 +45,7 @@ function Button({
   className,
   variant,
   size,
+  width,
   asChild = false,
   ...props
 }) {
@@ -47,7 +54,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, width, className }))}
       {...props} />
   );
 }

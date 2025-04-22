@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from .serializers import UserSerializer, UserCreateSerializer, UserProfileSerializer
 from .models import UserProfile
 
@@ -17,42 +18,60 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
+    def get_queryset(self):
+        queryset = User.objects.all()
+        status = self.request.query_params.get('status', None)
+        search = self.request.query_params.get('search', None)
+
+        if status:
+            queryset = queryset.filter(is_active=status.lower() == 'active')
+
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search) |
+                Q(email__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search)
+            )
+
+        return queryset
+
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
         return UserSerializer
-    
+
     def perform_destroy(self, instance):
         # Instead of deleting, mark as archived
         instance.status = 'archived'
         instance.is_active = False
         instance.save()
-    
+
     @action(detail=False, methods=['get', 'put'])
     def profile(self, request):
         user = request.user
-        
+
         if request.method == 'GET':
             serializer = UserSerializer(user)
             return Response(serializer.data)
-        
+
         elif request.method == 'PUT':
             profile_data = request.data.pop('profile', {})
-            
+
             # Update user data
             user_serializer = UserSerializer(user, data=request.data, partial=True)
             if user_serializer.is_valid():
                 user_serializer.save()
-                
+
                 # Update profile data
                 profile, created = UserProfile.objects.get_or_create(user=user)
                 profile_serializer = UserProfileSerializer(profile, data=profile_data, partial=True)
                 if profile_serializer.is_valid():
                     profile_serializer.save()
-                    
+
                 return Response(UserSerializer(user).data)
-            
+
             return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -62,7 +81,7 @@ class UserListCreateView(generics.ListCreateAPIView):
     """
     queryset = User.objects.all()
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return UserCreateSerializer
@@ -76,7 +95,7 @@ class UserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def destroy(self, request, *args, **kwargs):
         user = self.get_object()
         # Instead of deleting, mark as archived
@@ -91,29 +110,29 @@ class UserProfileView(APIView):
     API view for retrieving and updating the authenticated user's profile
     """
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
-    
+
     def put(self, request):
         user = request.user
         profile_data = request.data.pop('profile', {})
-        
+
         # Update user data
         user_serializer = UserSerializer(user, data=request.data, partial=True)
         if user_serializer.is_valid():
             user_serializer.save()
-            
+
             # Update profile data
             profile, created = UserProfile.objects.get_or_create(user=user)
             profile_serializer = UserProfileSerializer(profile, data=profile_data, partial=True)
             if profile_serializer.is_valid():
                 profile_serializer.save()
-                
+
             return Response(UserSerializer(user).data)
-        
+
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 from rest_framework_simplejwt.views import TokenObtainPairView

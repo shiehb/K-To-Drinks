@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { toast } from "react-toastify"
-import api from "../../api/api_url"
+import api, { ENDPOINTS } from "../../api/api_url"
 import { Archive, Edit, Search, UserPlus, Eye, ArchiveRestore } from "lucide-react"
 import jsPDF from "jspdf"
 import { useLongPress } from "@/hooks/useLongPress"
@@ -19,12 +19,15 @@ import { DataTable } from "@/components/ui/DataTable"
 import "../../css/usermanagement.css"
 
 export default function UserManagement() {
-  const [users, setUsers] = useState([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [roleFilter, setRoleFilter] = useState("")
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("active")
-  const inputRef = useRef(null)
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  // Removed unused statusFilter state
+  const [error, setError] = useState(null);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("active");
+  const inputRef = useRef(null);
   const [userForm, setUserForm] = useState({
     id: null,
     username: "",
@@ -36,17 +39,16 @@ export default function UserManagement() {
     status: "active",
     password: "",
     confirm_password: "",
-  })
-  const [isLoading, setIsLoading] = useState(false)
+  });
   const [confirmationDialog, setConfirmationDialog] = useState({
     isOpen: false,
     title: "",
     message: "",
     onConfirm: () => {},
-  })
-  const [selectedUsers, setSelectedUsers] = useState([])
-  const [showCheckboxes, setShowCheckboxes] = useState(false)
-  const [viewUser, setViewUser] = useState(null)
+  });
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const [viewUser, setViewUser] = useState(null);
 
   const handleClickOutside = useCallback((event) => {
     const tableElement = document.querySelector('.table-container');
@@ -74,33 +76,78 @@ export default function UserManagement() {
     }
   }, 500);
 
-  // Filter Users
-  const filteredUsers = users.filter(
-    (user) =>
-      (activeTab === "archived" ? user.status === "archived" : user.status === "active") &&
-      (user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))) &&
-      (roleFilter === "all" || roleFilter === "" || user.role === roleFilter)
-  )
-
-  // Fetch users from API
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true)
-        const response = await api.get("/users/")
-        setUsers(response.data)
-      } catch (error) {
-        console.error("Error fetching users:", error)
-        toast.error("Failed to fetch users.")
-      } finally {
-        setIsLoading(false)
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const params = new URLSearchParams();
+      
+      // Add archive status to params
+      params.append('is_archived', activeTab === 'archived');
+      
+      if (searchTerm) {
+        params.append('search', searchTerm);
       }
-    }
 
-    fetchUsers()
-  }, [])
+      const response = await api.get(`${ENDPOINTS.USERS}?${params.toString()}`);
+      
+      if (Array.isArray(response.data)) {
+        setUsers(response.data);
+      } else {
+        console.error('Unexpected response format:', response.data);
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setError(error.message);
+      toast.error('Failed to fetch users');
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, searchTerm ? 300 : 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchUsers, searchTerm]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      // First filter by archive status
+      if (activeTab === 'archived' && user.status !== 'archived') {
+        return false;
+      }
+      if (activeTab === 'active' && user.status === 'archived') {
+        return false;
+      }
+
+      // Then filter by role if selected
+      if (roleFilter && roleFilter !== 'all' && user.role !== roleFilter) {
+        return false;
+      }
+      
+      // Finally filter by search term
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          user.username?.toLowerCase().includes(searchLower) ||
+          user.email?.toLowerCase().includes(searchLower) ||
+          user.first_name?.toLowerCase().includes(searchLower) ||
+          user.last_name?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+  }, [users, activeTab, roleFilter, searchTerm]);
 
   // Handle User Form Submission
   const handleUserFormSubmit = async (e) => {
@@ -285,11 +332,6 @@ export default function UserManagement() {
   }
 
   // Utility Functions
-  const capitalizeEachWord = (str) => {
-    if (!str) return ""
-    return str.replace(/\b\w/g, (char) => char.toUpperCase())
-  }
-
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
   }
@@ -410,6 +452,17 @@ export default function UserManagement() {
     }
   ]
 
+  // Add error boundary fallback
+  if (error) {
+    return (
+      <div className="error-container">
+        <h3>Something went wrong</h3>
+        <p>{error}</p>
+        <Button onClick={() => fetchUsers()}>Try Again</Button>
+      </div>
+    );
+  }
+
   return (
     <Card className="user-management-card">
       <CardHeader className="card-header">
@@ -464,7 +517,12 @@ export default function UserManagement() {
             </div>
           </div>
 
-          <div {...longPressProps} className="table-wrapper">
+          <div 
+            {...longPressProps} 
+            onTouchStart={longPressProps.onTouchStart}
+            onTouchEnd={longPressProps.onTouchEnd}
+            className="table-wrapper"
+          >
             <DataTable
               columns={columns}
               data={filteredUsers}

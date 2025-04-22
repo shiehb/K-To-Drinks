@@ -127,9 +127,9 @@ AUTH_USER_MODEL = 'users.User'
 
 # REST Framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
 }
 
 # CORS settings
@@ -170,9 +170,10 @@ CORS_EXPOSE_HEADERS = [
 # JWT settings
 from datetime import timedelta
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-   'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-   'ROTATE_REFRESH_TOKENS': True,
-   'BLACKLIST_AFTER_ROTATION': True,
-   'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.CustomTokenObtainPairSerializer',
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),  # Covers half a workday
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=9),  # Covers full workday + 1 hour
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'TOKEN_OBTAIN_SERIALIZER': 'apps.users.serializers.CustomTokenObtainPairSerializer',
 }

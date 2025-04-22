@@ -1,67 +1,210 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "react-toastify";
+import api, { ENDPOINTS } from "@/api/api_url";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Archive, Eye, RefreshCcw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTable } from "@/components/ui/DataTable";
 import "../../css/product.css";
 
-const initialProducts = [
-  {
-    id: 1,
-    name: "Organic Apples",
-    sku: "FRUIT-001",
-    stock: 120,
-    price: 2.99,
-    description: "Fresh, organic apples sourced from local farms.",
-    image: "/placeholder.svg?height=100&width=100",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Whole Grain Bread",
-    sku: "BAKERY-001",
-    stock: 45,
-    price: 3.49,
-    description: "Freshly baked whole grain bread made with organic flour.",
-    image: "/placeholder.svg?height=100&width=100",
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Milk (1 Gallon)",
-    sku: "DAIRY-001",
-    stock: 78,
-    price: 4.29,
-    description: "Farm-fresh whole milk, pasteurized and homogenized.",
-    image: "/placeholder.svg?height=100&width=100",
-    status: "archived",
-  },
-];
-
 export default function ProductsPage() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
+  const [setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("active");
-  const tableRef = useRef(null);
 
-  const filteredProducts = products.filter(
-    (product) =>
-      (activeTab === "archived" ? product.status === "archived" : product.status === "active") &&
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+
+      if (activeTab === "archived") {
+        params.append("is_active", "false");
+      } else {
+        params.append("is_active", "true");
+      }
+
+      if (searchTerm) {
+        params.append("search", searchTerm.trim());
+      }
+
+      const response = await api.get(`${ENDPOINTS.PRODUCTS}`, {
+        params,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      }).catch(error => {
+        // Handle specific backend errors
+        if (error.response?.data?.detail?.includes('no such table')) {
+          toast.error("Database configuration error - please contact admin");
+        }
+        throw error;
+      });
+
+      // Handle different response formats
+      if (response.data?.results) {
+        setProducts(response.data.results);
+      } else if (Array.isArray(response.data)) {
+        setProducts(response.data);
+      } else if (typeof response.data === 'object') {
+        const productsArray = Object.values(response.data)
+          .filter(item => typeof item !== 'string');
+        setProducts(productsArray);
+      } else {
+        console.error("Unexpected response format:", response.data);
+        setProducts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error?.response?.data || error);
+      // Don't show toast if it's a 401 - the interceptor will handle it
+      if (error.response?.status !== 401) {
+        toast.error("Failed to fetch products");
+      }
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, searchTerm]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts();
+    }, searchTerm ? 300 : 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchProducts, searchTerm]);
+
+  const handleArchiveProduct = async (product) => {
+    try {
+      await api.patch(`${ENDPOINTS.PRODUCTS}${product.id}/`, {
+        is_active: !product.is_active,
+      });
+
+      toast.success(`Product ${product.is_active ? "archived" : "restored"} successfully`);
+      fetchProducts();
+    } catch (error) {
+      console.error("Error updating product:", error);
+      toast.error("Failed to update product");
+    }
+  };
 
   const handleViewProduct = (product) => {
     setSelectedProduct(product);
     setIsViewDialogOpen(true);
   };
+
+  const handleEditProduct = (product) => {
+    console.log("Edit product", product);
+  };
+
+  const columns = [
+    {
+      key: "name",
+      header: "Product Name",
+      sortable: true,
+    },
+    {
+      key: "product_id",
+      header: "SKU",
+      sortable: true,
+    },
+    {
+      key: "stock_quantity",
+      header: "Stock",
+      sortable: true,
+      render: (product) => (
+        <Badge variant={product.stock_quantity <= product.reorder_level ? "destructive" : "outline"}>
+          {product.stock_quantity}
+        </Badge>
+      ),
+    },
+    {
+      key: "price",
+      header: "Price",
+      sortable: true,
+      render: (product) => `₱${parseFloat(product.price).toFixed(2)}`,
+    },
+    {
+      key: "created_at",
+      header: "Date Added",
+      sortable: true,
+      render: (product) => new Date(product.created_at).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "actions-column",
+      render: (product) => (
+        <div className="actions-container">
+          {!product.is_active ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleViewProduct(product)}
+                className="action-button"
+              >
+                <Eye className="action-icon" />
+                <span className="sr-only">View</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleArchiveProduct(product)}
+                className="action-button"
+              >
+                <RefreshCcw className="action-icon" />
+                <span className="sr-only">Restore</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleViewProduct(product)}
+                className="action-button"
+              >
+                <Eye className="action-icon" />
+                <span className="sr-only">View</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEditProduct(product)}
+                className="action-button"
+              >
+                <Edit className="action-icon" />
+                <span className="sr-only">Edit</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleArchiveProduct(product)}
+                className="action-button"
+              >
+                <Archive className="action-icon" />
+                <span className="sr-only">Archive</span>
+              </Button>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <Card className="product-management-card">
@@ -100,93 +243,24 @@ export default function ProductsPage() {
             </TabsList>
           </div>
 
-          <div className="status-container">
-            <div className="status-content">
-              <div className="status-text">
-                Showing <strong>{filteredProducts.length}</strong> of{" "}
-                <strong>
-                  {products.filter((product) =>
-                    activeTab === "archived" ? product.status === "archived" : product.status === "active"
-                  ).length}
-                </strong>{" "}
-                {activeTab} products
-              </div>
-            </div>
-          </div>
-
           <TabsContent value="active" className="tab-content">
-            <div className="table-container">
-              <Table className="product-table" ref={tableRef}>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-center">Product Name</TableHead>
-                    <TableHead className="text-center">SKU</TableHead>
-                    <TableHead className="text-center">Stock</TableHead>
-                    <TableHead className="text-center">Price</TableHead>
-                    <TableHead className="text-center">Date Added</TableHead>
-                    <TableHead className="actions-column text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">
-                        No products found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="text-center">{product.name}</TableCell>
-                        <TableCell className="text-center">{product.sku}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline">{product.stock}</Badge>
-                        </TableCell>
-                        <TableCell className="text-center">₱{product.price.toFixed(2)}</TableCell>
-                        <TableCell className="text-center">
-                          {new Date().toLocaleDateString("en-US")}
-                        </TableCell>
-                        <TableCell className="actions-cell text-center">
-                          <div className="actions-container">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewProduct(product)}
-                              className="action-button"
-                            >
-                              <Eye className="action-icon" />
-                              <span className="sr-only">View</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => console.log("Edit product")}
-                              className="action-button"
-                            >
-                              <Edit className="action-icon" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => console.log("Archive product")}
-                              className="action-button"
-                            >
-                              <Archive className="action-icon" />
-                              <span className="sr-only">Archive</span>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              columns={columns}
+              data={products}
+              emptyMessage="No products found"
+              loadingMessage="Loading products..."
+              showCheckboxes={false}
+            />
           </TabsContent>
 
           <TabsContent value="archived" className="tab-content">
-            {/* Similar table structure for archived products */}
+            <DataTable
+              columns={columns}
+              data={products}
+              emptyMessage="No archived products found"
+              loadingMessage="Loading products..."
+              showCheckboxes={false}
+            />
           </TabsContent>
         </Tabs>
 
@@ -198,10 +272,18 @@ export default function ProductsPage() {
             {selectedProduct && (
               <div className="product-details">
                 <h3>{selectedProduct.name}</h3>
-                <p><strong>SKU:</strong> {selectedProduct.sku}</p>
-                <p><strong>Price:</strong> ₱{selectedProduct.price.toFixed(2)}</p>
-                <p><strong>Stock:</strong> {selectedProduct.stock}</p>
-                <p><strong>Description:</strong> {selectedProduct.description}</p>
+                <p>
+                  <strong>SKU:</strong> {selectedProduct.product_id}
+                </p>
+                <p>
+                  <strong>Price:</strong> ₱{parseFloat(selectedProduct.price).toFixed(2)}
+                </p>
+                <p>
+                  <strong>Stock:</strong> {selectedProduct.stock_quantity}
+                </p>
+                <p>
+                  <strong>Description:</strong> {selectedProduct.description}
+                </p>
               </div>
             )}
             <DialogFooter>

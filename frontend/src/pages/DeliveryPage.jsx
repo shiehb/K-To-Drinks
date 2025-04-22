@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
-import { Search, Truck, Calendar, Package, CheckCircle, XCircle, Clock, Map } from "lucide-react"
+import { Search, Truck, Calendar, Package, CheckCircle, XCircle, Clock, Map, Eye, ArrowRight, Check, X } from "lucide-react"
 import "../css/delivery.css"
 import api from "../api/api_url"
 import LeafletMapPopup from "../components/LeafletMapPopup"
+import { DataTable } from "@/components/ui/DataTable"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export default function DeliveryPage() {
   // State for deliveries
@@ -276,199 +280,262 @@ export default function DeliveryPage() {
     setShowRouteMap(false)
   }
 
+  // Define columns configuration before the return statement
+  const columns = [
+    {
+      key: "id",
+      header: "ID",
+      sortable: true
+    },
+    {
+      key: "orderId",
+      header: "Order ID",
+      sortable: true
+    },
+    {
+      key: "customer",
+      header: "Customer",
+      sortable: true
+    },
+    {
+      key: "store",
+      header: "Store",
+      sortable: true
+    },
+    {
+      key: "items",
+      header: "Items",
+      sortable: true
+    },
+    {
+      key: "total",
+      header: "Total",
+      sortable: true,
+      render: (delivery) => `₱${delivery.total.toFixed(2)}`
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      render: (delivery) => getStatusBadge(delivery.status)
+    },
+    {
+      key: "driver",
+      header: "Driver",
+      sortable: true
+    },
+    {
+      key: "deliveryDate",
+      header: "Delivery Date",
+      sortable: true,
+      render: (delivery) => `${new Date(delivery.deliveryDate).toLocaleDateString()} ${delivery.deliveryTime}`
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "actions-cell",
+      render: (delivery) => (
+        <div className="actions-container">
+          <button 
+            className="action-button view-button" 
+            onClick={() => handleViewDetails(delivery.id)}
+            title="View Details"
+          >
+            <Eye size={16} className="action-icon" />
+          </button>
+
+          {delivery.status === "pending" && (
+            <button
+              className="action-button start-button"
+              onClick={() => handleUpdateStatus(delivery.id, "in-transit")}
+              title="Start Delivery"
+            >
+              <ArrowRight size={16} className="action-icon" />
+            </button>
+          )}
+
+          {delivery.status === "in-transit" && (
+            <button
+              className="action-button complete-button"
+              onClick={() => handleUpdateStatus(delivery.id, "delivered")}
+              title="Complete Delivery"
+            >
+              <Check size={16} className="action-icon" />
+            </button>
+          )}
+        </div>
+      )
+    }
+  ]
+
   return (
     <div className="delivery-page">
+      <Card className="delivery-management-card">
+        <CardHeader className="card-header">
+          <div className="header-content">
+            <h2 className="page-title">Delivery Management</h2>
+            <div className="controls-container">
+              <div className="search-filters">
+                <div className="search-wrapper">
+                  <Search className="search-icon" />
+                  <Input
+                    type="text"
+                    placeholder="Search deliveries..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+                <div className="filters">
+                  <select 
+                    value={statusFilter} 
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="in-transit">In Transit</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
 
-      <div className="delivery-filters">
-        <div className="search-bar">
-          <Search className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search deliveries..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+                  <select 
+                    value={dateFilter} 
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="all">All Dates</option>
+                    <option value="today">Today</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                  </select>
+                </div>
+              </div>
+              <Button 
+                className="route-planning-btn" 
+                onClick={openRouteMap}
+                variant="default"
+              >
+                <Map size={16} className="btn-icon" />
+                Route Planning
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
 
-        <div className="filter-controls">
-          <div className="filter-group">
-            <label>Status:</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="in-transit">In Transit</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+        <CardContent>
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Truck />
+              </div>
+              <div className="stat-content">
+                <h3>Total Deliveries</h3>
+                <p>{deliveries.length}</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">
+                <CheckCircle />
+              </div>
+              <div className="stat-content">
+                <h3>Completed</h3>
+                <p>{deliveries.filter((d) => d.status === "delivered").length}</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Clock />
+              </div>
+              <div className="stat-content">
+                <h3>Pending</h3>
+                <p>{deliveries.filter((d) => d.status === "pending").length}</p>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-icon">
+                <Calendar />
+              </div>
+              <div className="stat-content">
+                <h3>Today's Deliveries</h3>
+                <p>{deliveries.filter((d) => d.deliveryDate === new Date().toISOString().split("T")[0]).length}</p>
+              </div>
+            </div>
           </div>
 
-          <div className="filter-group">
-            <label>Date:</label>
-            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-              <option value="all">All Dates</option>
-              <option value="today">Today</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="past">Past</option>
-            </select>
+          <div className="table-section">
+            {loading ? (
+              <div className="loading-state">
+                <div className="spinner"></div>
+                <p>Loading deliveries...</p>
+              </div>
+            ) : filteredDeliveries.length === 0 ? (
+              <div className="empty-state">
+                <Package size={48} />
+                <h3>No deliveries found</h3>
+                <p>Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <DataTable 
+                columns={columns}
+                data={filteredDeliveries}
+                className="deliveries-table"
+                emptyMessage="No deliveries found"
+                loadingMessage="Loading deliveries..."
+                isLoading={loading}
+                showCheckboxes={false}
+              />
+            )}
           </div>
-
-          <button className="route-planning-btn" onClick={openRouteMap}>
-            <Map size={16} />
-            Route Planning
-          </button>
-        </div>
-      </div>
-
-      <div className="delivery-stats">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <Truck />
-          </div>
-          <div className="stat-content">
-            <h3>Total Deliveries</h3>
-            <p>{deliveries.length}</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <CheckCircle />
-          </div>
-          <div className="stat-content">
-            <h3>Completed</h3>
-            <p>{deliveries.filter((d) => d.status === "delivered").length}</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <Clock />
-          </div>
-          <div className="stat-content">
-            <h3>Pending</h3>
-            <p>{deliveries.filter((d) => d.status === "pending").length}</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <Calendar />
-          </div>
-          <div className="stat-content">
-            <h3>Today's Deliveries</h3>
-            <p>{deliveries.filter((d) => d.deliveryDate === new Date().toISOString().split("T")[0]).length}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="delivery-table-container">
-        {loading ? (
-          <div className="loading-indicator">Loading deliveries...</div>
-        ) : filteredDeliveries.length === 0 ? (
-          <div className="empty-state">
-            <Package size={48} />
-            <h3>No deliveries found</h3>
-            <p>Try adjusting your search or filters</p>
-          </div>
-        ) : (
-          <table className="delivery-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Store</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Driver</th>
-                <th>Delivery Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDeliveries.map((delivery) => (
-                <tr key={delivery.id}>
-                  <td>{delivery.id}</td>
-                  <td>{delivery.orderId}</td>
-                  <td>{delivery.customer}</td>
-                  <td>{delivery.store}</td>
-                  <td>{delivery.items}</td>
-                  <td>₱{delivery.total.toFixed(2)}</td>
-                  <td>{getStatusBadge(delivery.status)}</td>
-                  <td>{delivery.driver}</td>
-                  <td>
-                    {new Date(delivery.deliveryDate).toLocaleDateString()} {delivery.deliveryTime}
-                  </td>
-                  <td className="actions-cell">
-                    <button className="action-button view-button" onClick={() => handleViewDetails(delivery.id)}>
-                      View
-                    </button>
-
-                    {delivery.status === "pending" && (
-                      <button
-                        className="action-button start-button"
-                        onClick={() => handleUpdateStatus(delivery.id, "in-transit")}
-                      >
-                        Start
-                      </button>
-                    )}
-
-                    {delivery.status === "in-transit" && (
-                      <button
-                        className="action-button complete-button"
-                        onClick={() => handleUpdateStatus(delivery.id, "delivered")}
-                      >
-                        Complete
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Route Planning Map Modal */}
       {showRouteMap && (
-        <div className="route-map-modal">
-          <div className="route-map-content">
-            <div className="route-map-header">
+        <div className="modal-overlay">
+          <div className="route-map-modal">
+            <div className="modal-header">
               <h2>Route Planning</h2>
               <button className="close-btn" onClick={closeRouteMap}>
-                ×
+                <X size={20} />
               </button>
             </div>
-            <div className="route-planning-controls">
-              <div className="day-selector">
-                <label>Select Day:</label>
-                <select value={routeDay} onChange={handleRouteDayChange}>
-                  <option value="Monday">Monday</option>
-                  <option value="Tuesday">Tuesday</option>
-                  <option value="Wednesday">Wednesday</option>
-                  <option value="Thursday">Thursday</option>
-                  <option value="Friday">Friday</option>
-                  <option value="Saturday">Saturday</option>
-                  <option value="Sunday">Sunday</option>
-                </select>
+            
+            <div className="modal-content">
+              <div className="planning-controls">
+                <div className="day-select">
+                  <label>Delivery Day:</label>
+                  <select value={routeDay} onChange={handleRouteDayChange}>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="stores-info">
+                  <Truck className="info-icon" />
+                  <span>{loadingStores ? "Loading stores..." : `${storeLocations.length} stores on route`}</span>
+                </div>
               </div>
-              <div className="store-count">
-                {loadingStores ? "Loading stores..." : `${storeLocations.length} stores found`}
-              </div>
-            </div>
 
-            <div className="route-map-container">
-              {loadingStores ? (
-                <div className="loading-map">Loading store locations...</div>
-              ) : (
-                <LeafletMapPopup
-                  lat={centerLocation.lat}
-                  lng={centerLocation.lng}
-                  markerLabel="Distribution Center"
-                  additionalMarkers={storeLocations}
-                />
-              )}
+              <div className="map-container">
+                {loadingStores ? (
+                  <div className="loading-state">
+                    <div className="spinner" />
+                    <p>Loading store locations...</p>
+                  </div>
+                ) : (
+                  <LeafletMapPopup
+                    lat={centerLocation.lat}
+                    lng={centerLocation.lng}
+                    markerLabel="Distribution Center"
+                    additionalMarkers={storeLocations}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>

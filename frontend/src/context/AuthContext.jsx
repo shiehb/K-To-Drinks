@@ -1,14 +1,13 @@
 import { useState, createContext, useContext, useEffect, useCallback } from "react";
 import api from "../api/api_url";
 import { toast } from "react-toastify";
+import PropTypes from "prop-types";
 
 export const AuthContext = createContext();
 
 export function useAuth() {
   return useContext(AuthContext);
 }
-
-import PropTypes from "prop-types";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -35,7 +34,6 @@ export const AuthProvider = ({ children }) => {
 
   const toggleDarkMode = () => setDarkMode(prev => !prev);
 
-  // Enhanced JWT parser with consistent user data structure
   const parseJwt = useCallback((token) => {
     try {
       if (!token) return null;
@@ -59,6 +57,7 @@ export const AuthProvider = ({ children }) => {
         first_name: decoded.first_name || "",
         last_name: decoded.last_name || "",
         role: decoded.role || "employee",
+        exp: decoded.exp, // Add expiration time
         ...decoded
       };
     } catch (e) {
@@ -67,7 +66,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Initialize auth state on mount
   const initializeAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("access_token");
@@ -76,6 +74,14 @@ export const AuthProvider = ({ children }) => {
       const userData = parseJwt(token);
       if (!userData) {
         console.warn("No valid user data in token");
+        return;
+      }
+
+      // Check token expiration
+      const now = Math.floor(Date.now() / 1000);
+      if (userData.exp && userData.exp < now) {
+        console.warn("Token expired");
+        clearAuthData();
         return;
       }
 
@@ -91,6 +97,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(newUser));
     } catch (error) {
       console.error("Auth initialization error:", error);
+      clearAuthData();
     }
   }, [parseJwt]);
 
@@ -119,7 +126,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("access_token", response.data.access);
         localStorage.setItem("refresh_token", response.data.refresh);
 
-        // Get user data and profile from the response
         const userData = response.data.user;
         
         const newUser = {
@@ -130,7 +136,7 @@ export const AuthProvider = ({ children }) => {
           email: userData.email,
           role: userData.role,
           status: userData.status,
-          avatarUrl: userData.profile?.avatar || null // Add avatar URL
+          avatarUrl: userData.profile?.avatar || null
         };
 
         setUser(newUser);
@@ -154,9 +160,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setUser(null);
     clearAuthData();
     toast.info("Logged out successfully");
+    window.location.href = '/login';
   };
 
   const checkAuth = useCallback(() => {
@@ -164,14 +170,22 @@ export const AuthProvider = ({ children }) => {
     if (!token) return false;
     
     const userData = parseJwt(token);
-    return !!userData;
+    if (!userData) return false;
+    
+    // Check token expiration with 5 second buffer
+    const now = Math.floor(Date.now() / 1000) + 5;
+    if (userData.exp && userData.exp < now) {
+      clearAuthData(); // Clear auth data if token is expired or about to expire
+      return false;
+    }
+    
+    return true;
   }, [parseJwt]);
 
-  // Add function to update avatar
   const updateAvatar = async (file) => {
     try {
       const formData = new FormData();
-      formData.append('avatar', file);  // Changed from 'profile.avatar' to 'avatar'
+      formData.append('avatar', file);
 
       const response = await api.put(`/users/profile/avatar/`, formData, {
         headers: {
@@ -205,7 +219,7 @@ export const AuthProvider = ({ children }) => {
       checkAuth,
       darkMode,
       toggleDarkMode,
-      updateAvatar, // Add updateAvatar to context
+      updateAvatar,
     }}>
       {children}
     </AuthContext.Provider>

@@ -84,6 +84,7 @@ export default function OrderPage() {
   const [selectedSize, setSelectedSize] = useState("")
   const [packagingType, setPackagingType] = useState("perBottle")
   const [caseQuantity, setCaseQuantity] = useState(12)
+  const [orderNotes, setOrderNotes] = useState("")
   const TAX_RATE = 2.0
 
   // Initialize filtered categories
@@ -417,33 +418,28 @@ export default function OrderPage() {
 
   const handleAddToOrder = () => {
     if (!selectedProduct) {
-      toast.error("Please select a product")
-      return
-    }
-
-    if (!selectedStore) {
-      toast.error("Please select a store")
-      return
+      toast.error("Please select a product");
+      return;
     }
 
     if (!selectedSize) {
-      toast.error("Please select a size")
-      return
+      toast.error("Please select a size");
+      return;
     }
 
-    const actualQuantity = packagingType === "perCase" ? quantity * caseQuantity : quantity
-    const actualTotal = selectedProduct.price * actualQuantity
+    const actualQuantity = packagingType === "perCase" ? quantity * caseQuantity : quantity;
+    const actualTotal = selectedProduct.price * actualQuantity;
 
-    const itemKey = `${selectedProduct.id}-${selectedSize}-${packagingType}`
+    const itemKey = `${selectedProduct.id}-${selectedSize}-${packagingType}`;
 
-    const existingItemIndex = orderItems.findIndex((item) => item.key === itemKey)
+    const existingItemIndex = orderItems.findIndex(item => item.key === itemKey);
 
     if (existingItemIndex >= 0) {
-      const updatedItems = [...orderItems]
-      updatedItems[existingItemIndex].quantity += actualQuantity
-      updatedItems[existingItemIndex].total =
-        updatedItems[existingItemIndex].quantity * updatedItems[existingItemIndex].unitPrice
-      setOrderItems(updatedItems)
+      const updatedItems = [...orderItems];
+      updatedItems[existingItemIndex].quantity += actualQuantity;
+      updatedItems[existingItemIndex].total = 
+        updatedItems[existingItemIndex].quantity * updatedItems[existingItemIndex].unitPrice;
+      setOrderItems(updatedItems);
     } else {
       const newItem = {
         key: itemKey,
@@ -453,29 +449,64 @@ export default function OrderPage() {
         unitPrice: selectedProduct.price,
         total: actualTotal,
         size: selectedSize,
-        packagingType: packagingType,
-      }
+        packagingType: packagingType
+      };
 
-      setOrderItems([...orderItems, newItem])
+      setOrderItems([...orderItems, newItem]);
     }
 
-    setQuantity(1)
-    toast.success("Item added to order")
-  }
+    // Update available stock
+    const newStock = availableStock - actualQuantity;
+    setAvailableStock(newStock);
+    
+    setQuantity(1);
+    toast.success("Item added to order");
+  };
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
     if (orderItems.length === 0) {
-      toast.error("Please add items to your order")
-      return
+      toast.error("Please add items to your order");
+      return;
     }
 
-    toast.success("Order submitted successfully!")
-    setOrderItems([])
-    setQuantity(1)
-    setSelectedProduct(null)
-    setSelectedCategory(null)
-    setSelectedSize("")
-  }
+    try {
+      const orderData = {
+        store_id: selectedStore !== "customer" ? selectedStore : null,
+        customer_type: selectedStore === "customer" ? "walk_in" : "store",
+        notes: orderNotes,
+        order_items: orderItems.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.unitPrice,
+          packaging_type: item.packagingType,
+          size: item.size
+        })),
+        total_amount: totalAmount,
+        tax_rate: TAX_RATE,
+        tax_amount: taxAmount,
+        subtotal: subtotal,
+        status: "pending" // Add default status
+      };
+
+      const response = await api.post(`${ENDPOINTS.ORDERS}`, orderData);
+
+      if (response.status === 201) {
+        toast.success("Order submitted successfully!");
+        // Reset form
+        setOrderItems([]);
+        setQuantity(1);
+        setSelectedProduct(null);
+        setSelectedCategory(null);
+        setSelectedSize("");
+        setOrderNotes("");
+      } else {
+        throw new Error("Failed to create order");
+      }
+    } catch (error) {
+      console.error("Error creating order:", error?.response?.data || error);
+      toast.error(error.response?.data?.message || "Failed to submit order");
+    }
+  };
 
   const subtotal = orderItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0)
   const taxAmount = (subtotal * TAX_RATE) / 100
@@ -486,19 +517,44 @@ export default function OrderPage() {
       <div className="order-container">
         <div className="product-selection">
           <div className="search-section">
-            <div className="search-bar">
-              <input type="text" placeholder="SEARCH" value={searchQuery} onChange={handleSearchChange} />
-              <Search className="search-icon" />
+            <div className="search-input-container">
+              <div className="search-wrapper">
+                <Search className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                />
+              </div>
             </div>
-
             <div className="store-selector">
-              <select value={selectedStore} onChange={(e) => setSelectedStore(e.target.value)} className="store-select">
-                <option value="">STORE NAME</option>
-                {stores.map((store) => (
-                  <option key={store.id} value={store.id}>
-                    {store.name}
-                  </option>
-                ))}
+              <select 
+                value={selectedStore} 
+                onChange={(e) => {
+                  setSelectedStore(e.target.value);
+                  if (e.target.value === "customer") {
+                    // Clear store list for walk-in customers
+                    setStores([]);
+                  } else if (e.target.value === "all") {
+                    // Fetch stores when viewing all
+                    fetchStores();
+                  }
+                }} 
+                className="store-select"
+              >
+                <option value="all">View All Stores</option>
+                <option value="customer">Walk-in Customer</option>
+                {stores.length > 0 && selectedStore !== "customer" && (
+                  <optgroup label="Store List">
+                    {stores.map((store) => (
+                      <option key={store.id} value={store.id}>
+                        {store.name} ({store.status})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
           </div>
@@ -506,16 +562,12 @@ export default function OrderPage() {
           <div className="categories-section">
             <h3 className="section-title">CATEGORIES</h3>
             <div className="categories-container">
-              <button
-                className="scroll-button scroll-left"
-                onClick={scrollCategoriesLeft}
-                aria-label="Scroll categories left"
-              >
-                <ChevronLeft />
+              <button className="scroll-button left" onClick={scrollCategoriesLeft}>
+                <ChevronLeft className="scroll-icon" />
               </button>
-
-              <div
-                className="categories-scroll-container"
+              
+              <div 
+                className="categories-scroll" 
                 ref={categoriesRef}
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
@@ -550,32 +602,9 @@ export default function OrderPage() {
                 )}
               </div>
 
-              <button
-                className="scroll-button scroll-right"
-                onClick={scrollCategoriesRight}
-                aria-label="Scroll categories right"
-              >
-                <ChevronRight />
+              <button className="scroll-button right" onClick={scrollCategoriesRight}>
+                <ChevronRight className="scroll-icon" />
               </button>
-            </div>
-
-            <div className="carousel-indicators">
-              {Array.from({ length: Math.ceil((filteredCategories.length / 12) * 2) }).map((_, index) => (
-                <span
-                  key={index}
-                  className={`indicator ${currentScrollIndex === index ? "active" : ""}`}
-                  onClick={() => {
-                    if (categoriesRef.current) {
-                      const scrollStep = categoriesRef.current.clientWidth / 2
-                      categoriesRef.current.scrollTo({
-                        left: index * scrollStep,
-                        behavior: "smooth",
-                      })
-                      setCurrentScrollIndex(index)
-                    }
-                  }}
-                />
-              ))}
             </div>
           </div>
 
@@ -735,7 +764,12 @@ export default function OrderPage() {
           <div className="order-notes">
             <div className="notes-section">
               <h4>NOTES</h4>
-              <textarea className="notes-input" placeholder="Add notes here..."></textarea>
+              <textarea 
+                className="notes-input" 
+                placeholder="Add notes here..."
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+              />
             </div>
 
             <div className="order-totals">

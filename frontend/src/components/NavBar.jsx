@@ -90,17 +90,6 @@ function NavBar({ isOpen, isMobile, isHidden }) {
           </div>
         ))}
       </div>
-
-      <div className="nav-footer">
-        <button className="nav-footer-item" onClick={() => {}}>
-          <span className="material-icons">settings</span>
-          {isOpen && <span>Settings</span>}
-        </button>
-        <button className="nav-footer-item" onClick={() => {}}>
-          <span className="material-icons">help_outline</span>
-          {isOpen && <span>Help</span>}
-        </button>
-      </div>
     </nav>
   )
 }

@@ -1,43 +1,45 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
-export const useLongPress = (callback, ms = 500) => {
-  const [startLongPress, setStartLongPress] = useState(false);
-  const timerRef = useRef();
-  const isLongPress = useRef(false);
-
-  useEffect(() => {
-    return () => {
-      clearTimeout(timerRef.current);
-    };
-  }, []);
+export function useLongPress(callback = () => {}, ms = 300) {
+  const timeoutRef = useRef(null);
+  const targetRef = useRef(null);
 
   const start = useCallback((event) => {
-    event.preventDefault();
+    // Skip if target is an interactive element
+    if (event.target.closest('button, a, input, select, .action-button')) {
+      return;
+    }
+
     event.stopPropagation();
     
-    isLongPress.current = false;
-    timerRef.current = setTimeout(() => {
-      isLongPress.current = true;
-      setStartLongPress(true);
-      callback();
+    // For touch events, prevent default only if not on interactive elements
+    if (event.type === 'touchstart') {
+      try {
+        event.preventDefault();
+      } catch {
+        // Ignore preventDefault errors
+      }
+    }
+
+    targetRef.current = event.target;
+    timeoutRef.current = setTimeout(() => {
+      callback(event);
     }, ms);
   }, [callback, ms]);
 
-  const clear = useCallback((event) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-    clearTimeout(timerRef.current);
-    
-    if (isLongPress.current) {
-      event?.stopPropagation();
+  const stop = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
+    targetRef.current = null;
   }, []);
 
   return {
     onMouseDown: start,
+    onMouseUp: stop,
+    onMouseLeave: stop,
     onTouchStart: start,
-    onMouseUp: clear,
-    onMouseLeave: clear,
-    onTouchEnd: clear,
+    onTouchEnd: stop,
+    options: { passive: false }
   };
-};
+}

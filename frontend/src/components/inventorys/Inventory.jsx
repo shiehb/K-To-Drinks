@@ -4,14 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -22,36 +14,50 @@ import {
   Info,
   RefreshCcw,
   AlertCircle,
-  Package
+  Package,
+  Eye
 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DataTable } from "@/components/ui/DataTable"
 
 const initialInventory = [
   {
     id: 1,
     name: "Cola",
+    sku: "BEV-001",
     quantity: 150,
+    price: 45.99,
     unit: "bottles",
     reorderPoint: 50,
     lastRestocked: "2024-04-08",
+    description: "Classic cola beverage in 330ml bottles",
+    image: "/placeholder.svg?height=100&width=100",
     status: "active",
   },
   {
     id: 2,
     name: "Lemon Juice",
+    sku: "BEV-002",
     quantity: 30,
+    price: 35.50,
     unit: "bottles",
     reorderPoint: 40,
     lastRestocked: "2024-04-07",
+    description: "Fresh lemon juice in 500ml bottles",
+    image: "/placeholder.svg?height=100&width=100",
     status: "active",
   },
   {
     id: 3,
     name: "Coffee Beans",
+    sku: "BEV-003",
     quantity: 25,
+    price: 1200.00,
     unit: "kg",
     reorderPoint: 30,
     lastRestocked: "2024-04-05",
+    description: "Premium roasted coffee beans",
+    image: "/placeholder.svg?height=100&width=100",
     status: "archived",
   },
 ]
@@ -84,77 +90,121 @@ export default function Inventory() {
     }
   }
 
-  const renderActionButtons = (item) => (
-    <TableCell className="actions-cell">
-      <div className="actions-container">
-        {item.status === "archived" ? (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewItem(item)}
-              className="action-button"
-            >
-              <Info className="action-icon" />
-              <span className="sr-only">View</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => console.log("Restore item")}
-              className="restore-button"
-            >
-              <RefreshCcw className="action-icon" />
-              Restore
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleViewItem(item)}
-              className="action-button"
-            >
-              <Info className="action-icon" />
-              <span className="sr-only">View</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => console.log("Edit item")}
-              className="action-button"
-            >
-              <Edit className="action-icon" />
-              <span className="sr-only">Edit</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => console.log("Archive item")}
-              className="action-button"
-            >
-              <Archive className="action-icon" />
-              <span className="sr-only">Archive</span>
-            </Button>
-          </>
-        )}
-      </div>
-    </TableCell>
-  )
+  const columns = [
+    {
+      key: "name",
+      header: "Product Name",
+      sortable: true
+    },
+    {
+      key: "sku",
+      header: "SKU",
+      sortable: true
+    },
+    {
+      key: "quantity",
+      header: "Stock",
+      sortable: true,
+      render: (item) => (
+        <Badge variant="outline">{item.quantity}</Badge>
+      )
+    },
+    {
+      key: "price",
+      header: "Price",
+      sortable: true,
+      render: (item) => `₱${item.price.toFixed(2)}`
+    },
+    {
+      key: "lastRestocked",
+      header: "Date Added",
+      sortable: true,
+      render: (item) => new Date(item.lastRestocked).toLocaleDateString("en-US")
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "actions-column",
+      render: (item) => (
+        <div className="actions-container">
+          {item.status === "archived" ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleViewItem(item)}
+                className="action-button"
+              >
+                <Eye className="action-icon" />
+                <span className="sr-only">View</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => console.log("Restore item")}
+                className="action-button"
+              >
+                <RefreshCcw className="action-icon" />
+                <span className="sr-only">Restore</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleViewItem(item)}
+                className="action-button"
+              >
+                <Eye className="action-icon" />
+                <span className="sr-only">View</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => console.log("Edit item")}
+                className="action-button"
+              >
+                <Edit className="action-icon" />
+                <span className="sr-only">Edit</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => console.log("Archive item")}
+                className="action-button"
+              >
+                <Archive className="action-icon" />
+                <span className="sr-only">Archive</span>
+              </Button>
+            </>
+          )}
+        </div>
+      )
+    }
+  ]
 
   return (
     <Card className="inventory-management-card">
       <CardHeader className="card-header">
         <div className="header-container">
-          <CardTitle className="card-title">
-            <Package className="title-icon" />
-            Inventory Management
-          </CardTitle>
-          <Button size="sm" className="add-button">
-            <Plus className="icon" />
-            Add Item
-          </Button>
+          <div className="search-input-container">
+            <div className="search-wrapper">
+              <Search className="search-icon" />
+              <Input
+                placeholder="Search items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+          </div>
+          <div className="button-group">
+            <Button size="sm" className="add-button">
+              <Plus className="icon" />
+              Add Item
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="card-content">
@@ -168,91 +218,24 @@ export default function Inventory() {
                 Archived Items
               </TabsTrigger>
             </TabsList>
-            <div className="search-container">
-              <div className="search-input-container">
-                <Search className="search-icon" />
-                <Input
-                  placeholder="Search items..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input"
-                />
-              </div>
-            </div>
           </div>
 
           <TabsContent value="active">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Restocked</TableHead>
-                  <TableHead className="actions-column">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInventory.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="empty-cell">
-                      No items found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredInventory.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell>
-                        {getStatusBadge(item.quantity, item.reorderPoint)}
-                      </TableCell>
-                      <TableCell>{new Date(item.lastRestocked).toLocaleDateString()}</TableCell>
-                      {renderActionButtons(item)}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <DataTable 
+              columns={columns}
+              data={filteredInventory}
+              emptyMessage="No items found"
+              loadingMessage="Loading inventory..."
+            />
           </TabsContent>
 
           <TabsContent value="archived">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Restocked</TableHead>
-                  <TableHead className="actions-column">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInventory.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="empty-cell">
-                      No archived items found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredInventory.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
-                      <TableCell>{item.unit}</TableCell>
-                      <TableCell>
-                        {getStatusBadge(item.quantity, item.reorderPoint)}
-                      </TableCell>
-                      <TableCell>{new Date(item.lastRestocked).toLocaleDateString()}</TableCell>
-                      {renderActionButtons(item)}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+            <DataTable 
+              columns={columns}
+              data={filteredInventory}
+              emptyMessage="No archived items found"
+              loadingMessage="Loading inventory..."
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
@@ -268,10 +251,16 @@ export default function Inventory() {
                 <strong>Name:</strong> {selectedItem.name}
               </div>
               <div className="detail-row">
-                <strong>Quantity:</strong> {selectedItem.quantity} {selectedItem.unit}
+                <strong>SKU:</strong> {selectedItem.sku}
               </div>
               <div className="detail-row">
-                <strong>Reorder Point:</strong> {selectedItem.reorderPoint} {selectedItem.unit}
+                <strong>Price:</strong> ₱{selectedItem.price.toFixed(2)}
+              </div>
+              <div className="detail-row">
+                <strong>Stock:</strong> {selectedItem.quantity} {selectedItem.unit}
+              </div>
+              <div className="detail-row">
+                <strong>Description:</strong> {selectedItem.description}
               </div>
               <div className="detail-row">
                 <strong>Last Restocked:</strong>{" "}

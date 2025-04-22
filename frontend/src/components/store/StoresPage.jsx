@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DataTable } from "@/components/ui/DataTable"
 import { toast } from "react-toastify"
-import { Search, Store, Edit, Archive, ArchiveRestore, Eye } from "lucide-react"
+import { Search, Store, Edit, Archive, ArchiveRestore, Eye, Map } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import api, { ENDPOINTS } from "@/api/api_url"
 
@@ -15,10 +14,10 @@ export default function StoresPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("active")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [statusFilter] = useState("all")
   const [isStoreModalOpen, setIsStoreModalOpen] = useState(false)
   const [selectedStores, setSelectedStores] = useState([])
-  const [showCheckboxes, setShowCheckboxes] = useState(false)
+  const [showCheckboxes] = useState(false)
   const [storeForm, setStoreForm] = useState({
     id: "",
     name: "",
@@ -92,6 +91,16 @@ export default function StoresPage() {
             className="action-button"
             onClick={(e) => {
               e.stopPropagation()
+              handleViewMap(store)
+            }}
+            title="View Map"
+          >
+            <Map className="h-4 w-4" />
+          </button>
+          <button
+            className="action-button"
+            onClick={(e) => {
+              e.stopPropagation()
               handleArchiveStore(store)
             }}
             title={store.is_archived ? "Restore" : "Archive"}
@@ -120,47 +129,38 @@ export default function StoresPage() {
   // Fetch stores
   const fetchStores = useCallback(async () => {
     try {
-      setIsLoading(true)
-      const params = new URLSearchParams()
+      setIsLoading(true);
+      const params = new URLSearchParams();
       
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter === 'active' ? 'Active' : 'Inactive')
+      if (activeTab === 'archived') {
+        params.append('is_archived', 'true');
+      } else {
+        params.append('is_archived', 'false');
       }
-      params.append('is_archived', activeTab === 'archived')
 
       if (searchTerm) {
-        params.append('search', searchTerm)
+        params.append('search', searchTerm);
       }
 
-      const response = await api.get(`${ENDPOINTS.STORES}/?${params.toString()}`)
+      const response = await api.get(ENDPOINTS.STORES, { params });
       
       if (Array.isArray(response.data)) {
-        const transformedStores = response.data.map(store => ({
-          id: store.id,
-          name: store.name,
-          owner_name: store.owner_name,
-          contact: store.contact,
-          email: store.email || '',
-          address: store.address,
-          status: store.status,
-          is_archived: store.is_archived,
-          day: store.day,
-          hours: store.hours,
-          coordinates: store.coordinates || [0, 0]
-        }))
-        setStores(transformedStores)
+        setStores(response.data);
+      } else if (Array.isArray(response.data.results)) {
+        // Handle paginated response
+        setStores(response.data.results);
       } else {
-        console.error('Unexpected response format:', response.data)
-        setStores([])
+        console.error('Unexpected response format:', response.data);
+        setStores([]);
       }
     } catch (error) {
-      console.error('Error fetching stores:', error.response || error)
-      toast.error('Failed to fetch stores')
-      setStores([])
+      console.error('Error fetching stores:', error);
+      toast.error('Failed to fetch stores');
+      setStores([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [activeTab, statusFilter, searchTerm])
+  }, [activeTab, searchTerm]);
 
   useEffect(() => {
     fetchStores()
@@ -259,7 +259,7 @@ export default function StoresPage() {
           })
           toast.success(`Store ${store.is_archived ? "restored" : "archived"} successfully`)
           fetchStores()
-        } catch (error) {
+        } catch {
           toast.error("Operation failed")
         } finally {
           setConfirmationDialog(prev => ({ ...prev, isOpen: false }))
@@ -271,6 +271,16 @@ export default function StoresPage() {
   // Handle store view
   const handleViewStore = (store) => {
     setViewStore(store)
+  }
+
+  const handleViewMap = (store) => {
+    if (store.coordinates && store.coordinates.length === 2) {
+      const [latitude, longitude] = store.coordinates;
+      const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      window.open(mapUrl, "_blank");
+    } else {
+      toast.error("Invalid coordinates for this store");
+    }
   }
 
   // Handle form cancel
@@ -291,53 +301,58 @@ export default function StoresPage() {
   }
 
   // Handle bulk actions
-  const handleBulkAction = async (action) => {
-    if (!selectedStores.length) {
-      toast.warning("No stores selected")
-      return
-    }
-
-    setConfirmationDialog({
-      isOpen: true,
-      title: `${action} Stores`,
-      message: `Are you sure you want to ${action.toLowerCase()} the selected stores?`,
-      onConfirm: async () => {
-        try {
-          await Promise.all(
-            selectedStores.map(id =>
-              api.patch(`/stores/${id}/`, {
-                is_archived: action === "Archive"
-              })
-            )
-          )
-          toast.success(`Stores ${action.toLowerCase()}d successfully`)
-          setSelectedStores([])
-          setShowCheckboxes(false)
-          fetchStores()
-        } catch (error) {
-          toast.error("Operation failed")
-        } finally {
-          setConfirmationDialog(prev => ({ ...prev, isOpen: false }))
-        }
-      }
-    })
-  }
+  // Removed unused handleBulkAction function
 
   // Long press handler for mobile
-  const longPressProps = {
-    onTouchStart: () => {
-      const timer = setTimeout(() => {
-        setShowCheckboxes(true)
-      }, 500)
-      return () => clearTimeout(timer)
+
+  const handleViewAllMaps = useCallback(() => {
+    try {
+      if (!stores.length) {
+        toast.warning('No stores available to view on map');
+        return;
+      }
+
+      const storeLocations = stores
+        .filter(store => {
+          const hasValidCoordinates = store.coordinates && 
+            Array.isArray(store.coordinates) && 
+            store.coordinates.length === 2 &&
+            !isNaN(store.coordinates[0]) && 
+            !isNaN(store.coordinates[1]);
+          
+          if (!hasValidCoordinates) {
+            console.warn(`Store ${store.name} has invalid coordinates:`, store.coordinates);
+          }
+          return hasValidCoordinates;
+        })
+        .map(store => ({
+          id: store.id,
+          name: store.name,
+          coordinates: store.coordinates,
+          address: store.address
+        }));
+
+      if (!storeLocations.length) {
+        toast.error('No stores have valid coordinates to display on map');
+        return;
+      }
+
+      const queryParams = new URLSearchParams({
+        data: JSON.stringify(storeLocations)
+      });
+
+      window.location.href = `/store-maps?${queryParams.toString()}`;
+    } catch (error) {
+      console.error('Error navigating to maps:', error);
+      toast.error('Failed to open maps view');
     }
-  }
+  }, [stores]);
 
   return (
     <Card className="stores-management-card">
       <CardHeader className="card-header">
         <div className="header-container">
-          <div className="search-input-container w-[400px]">
+          <div className="search-input-container">
             <Search className="search-icon" />
             <Input 
               placeholder="Search stores..."
@@ -347,7 +362,21 @@ export default function StoresPage() {
             />
           </div>
           <div className="button-group">
-            <Button onClick={() => setIsStoreModalOpen(true)} size="sm" className="add-button">
+            <Button 
+              onClick={handleViewAllMaps} 
+              size="sm"
+              width="fixed"
+              className="add-button" 
+              disabled={isLoading || stores.length === 0}
+            >
+              <Map className="icon" />
+              View Maps
+            </Button>
+            <Button 
+              onClick={() => setIsStoreModalOpen(true)} 
+              size="sm"
+              className="add-button"
+            >
               <Store className="icon" />
               Add Store
             </Button>
