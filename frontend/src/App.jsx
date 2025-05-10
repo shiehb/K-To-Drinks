@@ -137,7 +137,7 @@ function App() {
 
       <Routes>
         {/* Public Route */}
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         {/* Protected Routes */}
         <Route element={<Layout />}>
@@ -154,7 +154,7 @@ function App() {
         </Route>
 
         {/* Fallback route */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="" />} />
       </Routes>
     </Router>
   )
