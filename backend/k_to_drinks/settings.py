@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-+4qneyxqn$*d(2(3@v-_@w9-ij7$vgii84m$%x9od4o^gf)o$*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('IS_DEVELOPMENT', 'true').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1','k-to-drinks-management-system.onrender.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1','https://k-to-drinks.onrender.com']
 
 
 # Application definition
@@ -142,10 +142,7 @@ REST_FRAMEWORK = {
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False  # Keep this False for security
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Add Vite's default port
-    "http://localhost:3000",  # Keep this if you also use React's default port
-    "http://127.0.0.1:5173",
-]
+    "https://k-to-drinks.vercel.app",
 
 CORS_ALLOW_CREDENTIALS = True
 
