@@ -143,6 +143,7 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = False  # Keep this False for security
 CORS_ALLOWED_ORIGINS = [
     "https://k-to-drinks.vercel.app",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
