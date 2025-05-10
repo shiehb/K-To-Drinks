@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-+4qneyxqn$*d(2(3@v-_@w9-ij7$vgii84m$%x9od4o^gf)o$*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('IS_DEVELOPMENT', 'true').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1','https://k-to-drinks.onrender.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1','k-to-drinks.onrender.com']
 
 
 # Application definition
