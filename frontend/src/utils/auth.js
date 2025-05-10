@@ -26,7 +26,7 @@ export const refreshToken = async () => {
         const refresh = localStorage.getItem('refreshToken');
         if (!refresh) throw new Error('No refresh token');
 
-        const response = await fetch('http://localhost:8000/api/token/refresh/', {
+        const response = await fetch('https://k-to-drinks.onrender.com/api/token/refresh/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh })
