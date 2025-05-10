@@ -1,21 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowUpRight, Calendar, Package, TrendingUp, Truck, Users } from "lucide-react"
+import { ArrowUpRight, Calendar, Package, TrendingUp, Truck, AlertTriangle, XCircle } from "lucide-react"
 import "../css/dashboard.css"
+import "@/css/all.css"
 
 // Import shadcn components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export default function Dashboard() {
-  const [selectedItem, setSelectedItem] = useState(null)
-  const [deliveryData, setDeliveryData] = useState([]) // State to hold delivery data
+  const [deliveryData, setDeliveryData] = useState([])
+  const [stockAlerts, setStockAlerts] = useState([])
 
-  // Mock sales data (replace this with actual API calls or dynamic data)
+  // Mock sales data
   const mockSalesData = [
     {
       id: 1,
@@ -95,6 +96,38 @@ export default function Dashboard() {
     },
   ]
 
+  // Mock stock alerts data
+  const mockStockAlerts = [
+    {
+      id: "PROD-101",
+      name: "Coca-Cola 1.5L",
+      currentStock: 2,
+      threshold: 10,
+      status: "low"
+    },
+    {
+      id: "PROD-205",
+      name: "Pepsi 2L",
+      currentStock: 0,
+      threshold: 5,
+      status: "out"
+    },
+    {
+      id: "PROD-312",
+      name: "Sprite 1L",
+      currentStock: 3,
+      threshold: 15,
+      status: "low"
+    },
+    {
+      id: "PROD-418",
+      name: "Royal 500ml",
+      currentStock: 0,
+      threshold: 20,
+      status: "out"
+    }
+  ]
+
   // Calculate delivery metrics
   useEffect(() => {
     // Update data with calculated values
@@ -106,26 +139,15 @@ export default function Dashboard() {
         percentChange: (((item.currentSales - item.previousSales) / item.previousSales) * 100).toFixed(1),
       })),
     )
+    
+    // Set stock alerts
+    setStockAlerts(mockStockAlerts)
   }, [])
 
-  const handleViewDetails = (item) => {
-    setSelectedItem(item)
-  }
 
   return (
     <div className="dashboard-container">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="tabs-list">
-          <TabsTrigger value="overview" className="tab">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="tab">
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="tab">
-            Reports
-          </TabsTrigger>
-        </TabsList>
         <TabsContent value="overview" className="space-y-4 tab-content">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {deliveryData.map((item) => (
@@ -147,6 +169,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             ))}
+            
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -204,102 +227,61 @@ export default function Dashboard() {
             </Card>
             <Card className="col-span-3 card">
               <CardHeader className="card-header">
-                <CardTitle className="card-title">Delivery Performance</CardTitle>
+                <CardTitle className="card-title">Stock Alerts</CardTitle>
                 <CardDescription className="card-description">
-                  Delivery efficiency metrics for the current month.
+                  Products that need immediate attention.
                 </CardDescription>
               </CardHeader>
               <CardContent className="card-content">
-                <div className="metrics-container">
-                  <div className="metric-item">
-                    <div className="metric-indicator">
-                      <div className="metric-dot bg-primary"></div>
-                      <span className="metric-label">On-time Delivery</span>
+                <div className="alerts-container">
+                  {stockAlerts.length === 0 ? (
+                    <div className="no-alerts">
+                      <p>No stock alerts at this time.</p>
                     </div>
-                    <div className="metric-value">94%</div>
-                  </div>
-                  <div className="metric-item">
-                    <div className="metric-indicator">
-                      <div className="metric-dot bg-orange-500"></div>
-                      <span className="metric-label">Delayed Delivery</span>
+                  ) : (
+                    <div className="alerts-list">
+                      {stockAlerts.map((alert) => (
+                        <div key={alert.id} className={`alert-item ${alert.status}`}>
+                          <div className="alert-icon">
+                            {alert.status === "out" ? (
+                              <XCircle className="h-5 w-5 text-red-500" />
+                            ) : (
+                              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                            )}
+                          </div>
+                          <div className="alert-content">
+                            <div className="alert-title">{alert.name}</div>
+                            <div className="alert-details">
+                              <span className="product-id">{alert.id}</span>
+                              <span className="stock-info">
+                                Stock: {alert.currentStock} (Threshold: {alert.threshold})
+                              </span>
+                            </div>
+                          </div>
+                          <div className="button-group">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="add-button"
+                          >
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="metric-value">5%</div>
-                  </div>
-                  <div className="metric-item">
-                    <div className="metric-indicator">
-                      <div className="metric-dot bg-red-500"></div>
-                      <span className="metric-label">Failed Delivery</span>
-                    </div>
-                    <div className="metric-value">1%</div>
-                  </div>
-
-                  <div className="driver-container">
-                    <h4 className="driver-title">Top Performing Drivers</h4>
-                    <div className="driver-list">
-                      <div className="driver-item">
-                        <div className="driver-avatar">
-                          <Users className="h-4 w-4" />
-                        </div>
-                        <div className="driver-info">
-                          <p className="driver-name">Jericho Urbano</p>
-                          <p className="driver-stat">98% on-time rate</p>
-                        </div>
-                        <Button variant="ghost" size="icon" className="button button-ghost button-icon ml-auto">
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="driver-item">
-                        <div className="driver-avatar">
-                          <Users className="h-4 w-4" />
-                        </div>
-                        <div className="driver-info">
-                          <p className="driver-name">Harry Justine Zabate</p>
-                          <p className="driver-stat">97% on-time rate</p>
-                        </div>
-                        <Button variant="ghost" size="icon" className="button button-ghost button-icon ml-auto">
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
               <CardFooter className="card-footer">
                 <Button variant="outline" className="button button-outline w-full button-sm">
-                  View Detailed Report
+                  View Inventory
                 </Button>
               </CardFooter>
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="analytics" className="space-y-4 tab-content">
-          <Card className="card">
-            <CardHeader className="card-header">
-              <CardTitle className="card-title">Analytics</CardTitle>
-              <CardDescription className="card-description">
-                View detailed analytics about your delivery operations.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="card-content">
-              <div className="placeholder">Analytics content will appear here</div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="reports" className="space-y-4 tab-content">
-          <Card className="card">
-            <CardHeader className="card-header">
-              <CardTitle className="card-title">Reports</CardTitle>
-              <CardDescription className="card-description">
-                Access and download reports for your business.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="card-content">
-              <div className="placeholder">Reports content will appear here</div>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   )
 }
-

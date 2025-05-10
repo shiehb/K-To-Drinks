@@ -8,6 +8,20 @@ import { toast } from "react-toastify"
 import { Search, Store, Edit, Archive, ArchiveRestore, Eye, Map } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import api, { ENDPOINTS } from "@/api/api_url"
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet'
+import L from 'leaflet'
+import { OpenStreetMapProvider } from 'leaflet-geosearch';
+import 'leaflet-geosearch/dist/geosearch.css'
+
+import "@/css/all.css"
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 export default function StoresPage() {
   const [stores, setStores] = useState([])
@@ -28,8 +42,38 @@ export default function StoresPage() {
     status: "Active",
     day: "Monday",
     hours: "",
-    coordinates: [0, 0] // latitude, longitude
+    coordinates: [16.6366, 120.3131] // Default coordinates (SLC)
   })
+  const provider = new OpenStreetMapProvider();
+
+  const handleAddressSearch = async () => {
+    if (!storeForm.address) {
+      toast.warning("Please enter an address first");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const results = await provider.search({ query: storeForm.address });
+      
+      if (results.length > 0) {
+        const { x: lng, y: lat, label } = results[0];
+        setStoreForm(prev => ({
+          ...prev,
+          coordinates: [lat, lng],
+          address: label // Update with formatted address from geocoding
+        }));
+        toast.success("Location found and pinned on map");
+      } else {
+        toast.warning("No location found for this address");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      toast.error("Error searching for location");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const [confirmationDialog, setConfirmationDialog] = useState({
     isOpen: false,
     title: "",
@@ -37,6 +81,40 @@ export default function StoresPage() {
     onConfirm: null
   })
   const [viewStore, setViewStore] = useState(null)
+
+  // Location Marker Component
+  function LocationMarker({ position, setPosition, label }) {
+    const map = useMapEvents({
+      click(e) {
+        setPosition([e.latlng.lat, e.latlng.lng]);
+      },
+    });
+  
+    // Custom icon
+    const customIcon = new L.Icon({
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      shadowSize: [41, 41]
+    });
+  
+    return position === null ? null : (
+      <Marker position={position} icon={customIcon}>
+        <Popup>
+          <div className="p-2">
+            <strong>Store Location</strong>
+            <div className="text-sm">{label || "No address provided"}</div>
+            <div className="text-xs mt-1">
+              Lat: {position[0].toFixed(6)}, Lng: {position[1].toFixed(6)}
+            </div>
+          </div>
+        </Popup>
+      </Marker>
+    );
+  }
+  
 
   const columns = [
     {
@@ -62,23 +140,29 @@ export default function StoresPage() {
       render: (store) => store.email || "N/A"
     },
     {
-      key: "status",
-      header: "Status",
+      key: "address",
+      header: "Address",
       sortable: true,
-      render: (store) => (
-        <Badge variant={store.status === "Active" ? "success" : "secondary"}>
-          {store.status}
-        </Badge>
-      )
+      render: (store) => store.address
     },
+    // {
+    //   key: "status",
+    //   header: "Status",
+    //   sortable: true,
+    //   render: (store) => (
+    //     <Badge variant={store.status === "Active" ? "success" : "secondary"}>
+    //       {store.status}
+    //     </Badge>
+    //   )
+    // },
     {
       key: "actions",
       header: "",
       className: "text-right",
       render: (store) => (
-        <div className="flex justify-end gap-4">
+        <div className="action-buttons-container">
           <button
-            className="action-button"
+            className="action-button edit-button"
             onClick={(e) => {
               e.stopPropagation()
               handleEditStore(store)
@@ -98,7 +182,7 @@ export default function StoresPage() {
             <Map className="h-4 w-4" />
           </button>
           <button
-            className="action-button"
+            className="action-button archive-button"
             onClick={(e) => {
               e.stopPropagation()
               handleArchiveStore(store)
@@ -112,7 +196,7 @@ export default function StoresPage() {
             )}
           </button>
           <button
-            className="action-button"
+            className="action-button view-button"
             onClick={(e) => {
               e.stopPropagation()
               handleViewStore(store)
@@ -219,9 +303,7 @@ export default function StoresPage() {
         email: "",
         address: "",
         status: "Active",
-        day: "Monday",
-        hours: "",
-        coordinates: [0, 0]
+        coordinates: [51.505, -0.09]
       })
       fetchStores()
     } catch (error) {
@@ -241,7 +323,8 @@ export default function StoresPage() {
       contact: store.contact,
       email: store.email,
       address: store.address,
-      status: store.status.toLowerCase()
+      status: store.status.toLowerCase(),
+      coordinates: store.coordinates || [51.505, -0.09]
     })
     setIsStoreModalOpen(true)
   }
@@ -286,24 +369,17 @@ export default function StoresPage() {
   // Handle form cancel
   const handleCancel = () => {
     setStoreForm({
-      id: "",
+      id:"",
       name: "",
       owner_name: "",
       contact: "",
       email: "",
       address: "",
       status: "Active",
-      day: "Monday",
-      hours: "",
-      coordinates: [0, 0] // latitude, longitude
+      coordinates: [51.505, -0.09]
     })
     setIsStoreModalOpen(false)
   }
-
-  // Handle bulk actions
-  // Removed unused handleBulkAction function
-
-  // Long press handler for mobile
 
   const handleViewAllMaps = useCallback(() => {
     try {
@@ -393,10 +469,9 @@ export default function StoresPage() {
                   Active Stores
                 </TabsTrigger>
                 <TabsTrigger value="archived" className="tab">
-                  Archived Stores
+                  Inactive Stores
                 </TabsTrigger>
               </TabsList>
-             
             </div>
           </div>
 
@@ -425,21 +500,126 @@ export default function StoresPage() {
           <div className="custom-modal">
             <h2 className="modal-title">{storeForm.id ? "Edit Store" : "Add Store"}</h2>
             <form onSubmit={handleStoreFormSubmit} className="store-form">
-              <div className="form-group">
-                <label htmlFor="name">Store Name:</label>
-                <input
-                  id="name"
-                  value={storeForm.name}
-                  onChange={(e) => setStoreForm(prev => ({ ...prev, name: e.target.value }))}
-                  required
-                />
+              <div className="form-grid">
+                {/* First Column */}
+                <div className="form-group">
+                  <label htmlFor="name">Store Name:</label>
+                  <input
+                    id="name"
+                    value={storeForm.name}
+                    onChange={(e) => setStoreForm(prev => ({ ...prev, name: e.target.value }))}
+                    required
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="owner_name">Owner Name:</label>
+                  <input
+                    id="owner_name"
+                    value={storeForm.owner_name}
+                    onChange={(e) => setStoreForm(prev => ({ ...prev, owner_name: e.target.value }))}
+                    required
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="contact">Contact:</label>
+                  <input
+                    id="contact"
+                    value={storeForm.contact}
+                    onChange={(e) => setStoreForm(prev => ({ ...prev, contact: e.target.value }))}
+                    required
+                    className="form-input"
+                  />
+                </div>
+
+                {/* Second Column */}
+                <div className="form-group">
+                  <label htmlFor="email">Email:</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={storeForm.email}
+                    onChange={(e) => setStoreForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="status">Status:</label>
+                  <select
+                    id="status"
+                    value={storeForm.status}
+                    onChange={(e) => setStoreForm(prev => ({ ...prev, status: e.target.value }))}
+                    className="form-select"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+
+                {/* Full width fields */}
+                <div className="form-group span-2">
+                  <label htmlFor="address">Address:</label>
+                  <div className="address-input-container">
+                    <input
+                      id="address"
+                      type="text"
+                      value={storeForm.address}
+                      onChange={(e) => setStoreForm(prev => ({ ...prev, address: e.target.value }))}
+                      required
+                      className="form-input"
+                      placeholder="Enter address and click search icon"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddressSearch}
+                      className="address-search-button"
+                      title="Search location on map"
+                      disabled={!storeForm.address}
+                    >
+                      <Map className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-group span-2">
+                  <label htmlFor="map">Location:</label>
+                  <div className="map-container">
+                    <MapContainer
+                      center={storeForm.coordinates}
+                      zoom={15}  // Increased zoom for better precision
+                      style={{ height: '100%', width: '100%' }}
+                      className="map-display"
+                    >
+                      <TileLayer
+                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                         maxZoom={19}
+                      />
+                      <LocationMarker 
+                        position={storeForm.coordinates}
+                        setPosition={(coords) => setStoreForm(prev => ({ ...prev, coordinates: coords }))}
+                        label={storeForm.address}
+                      />
+                    </MapContainer>
+                  </div>
+                  <div className="map-coordinates">
+                    <span>Click on the map to set the store location</span>
+                    <span>
+                      Latitude: {storeForm.coordinates[0].toFixed(6)}, Longitude: {storeForm.coordinates[1].toFixed(6)}
+                    </span>
+                  </div>
+                </div>
               </div>
-              {/* Add other form fields */}
+
               <div className="form-actions">
-                <button type="submit" disabled={isLoading}>
+                <button type="submit" className="submit-button" disabled={isLoading}>
                   {isLoading ? "Saving..." : "Save"}
                 </button>
-                <button type="button" onClick={handleCancel}>
+                <button type="button" className="cancel-button" onClick={handleCancel}>
                   Cancel
                 </button>
               </div>
@@ -451,13 +631,94 @@ export default function StoresPage() {
       {/* View Store Modal */}
       {viewStore && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal">
-            <h2 className="modal-title">Store Details</h2>
-            <div className="store-details">
-              {/* Display store details */}
+          <div className="custom-modal max-w-md w-full">
+            <div className="modal-header flex justify-between items-start mb-6">
+              <div>
+                <h2 className="modal-title text-2xl font-bold text-gray-900 dark:text-white">
+                  Store Details
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Detailed information about this store
+                </p>
+              </div>
+              <button
+                className="close-button p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => setViewStore(null)}
+                aria-label="Close"
+                title="Close"
+              >
+                <span className="material-icons text-gray-500 dark:text-gray-400">close</span>
+              </button>
             </div>
-            <div className="modal-actions">
-              <button onClick={() => setViewStore(null)}>Close</button>
+            
+            <div className="user-details grid grid-cols-2 gap-4 mb-6">
+              <div className="col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">ID</p>
+                  <p className="text-gray-900 dark:text-white">{viewStore.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Status</p>
+                  <Badge variant={viewStore.status === "Active" ? "success" : "secondary"}>
+                    {viewStore.status}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="col-span-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Store Name</p>
+                <p className="text-gray-900 dark:text-white">{viewStore.name}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Owner</p>
+                <p className="text-gray-900 dark:text-white">{viewStore.owner_name}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Contact</p>
+                <p className="text-gray-900 dark:text-white">{viewStore.contact}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Email</p>
+                <p className="text-gray-900 dark:text-white">{viewStore.email || "No email added"}</p>
+              </div>
+
+              <div className="col-span-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Address</p>
+                <p className="text-gray-900 dark:text-white">{viewStore.address || "N/A"}</p>
+              </div>
+
+              {viewStore.coordinates && viewStore.coordinates.length === 2 && (
+                <div className="col-span-2">
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Coordinates</p>
+                  <p className="text-gray-900 dark:text-white">
+                    Latitude: {viewStore.coordinates[0]}, Longitude: {viewStore.coordinates[1]}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-actions flex justify-end space-x-3 mt-6">
+              <div className="button-group">
+                <Button 
+                  onClick={() => handleViewMap(viewStore)}
+                  variant="outline"
+                  size="sm"
+                  className="add-button"
+                >
+                  <Map className="icon" />
+                  View Map
+                </Button>
+                <Button 
+                  onClick={() => setViewStore(null)}
+                  size="sm"
+                  className="cancel-button"
+                >
+                  Close Details
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -466,14 +727,19 @@ export default function StoresPage() {
       {/* Confirmation Dialog */}
       {confirmationDialog.isOpen && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal confirmation-modal">
-            <h3>{confirmationDialog.title}</h3>
-            <p>{confirmationDialog.message}</p>
+          <div className="confirmation-modal">
+            <div className="confirmation-icon">
+              <span className="material-icons">warning</span>
+            </div>
+            <h3 className="confirmation-title">{confirmationDialog.title}</h3>
+            <p className="confirmation-message">{confirmationDialog.message}</p>
             <div className="confirmation-actions">
-              <button onClick={() => setConfirmationDialog(prev => ({ ...prev, isOpen: false }))}>
+              <button onClick={() => setConfirmationDialog(prev => ({ ...prev, isOpen: false }))}  
+                className="cancel-button">
                 Cancel
               </button>
-              <button onClick={confirmationDialog.onConfirm}>
+              <button onClick={confirmationDialog.onConfirm}
+                className="confirm-button">
                 Confirm
               </button>
             </div>

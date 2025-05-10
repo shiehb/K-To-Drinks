@@ -1,23 +1,20 @@
-"use client"
-
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { toast } from "react-toastify"
-import api, { ENDPOINTS } from "../../api/api_url"
-import { Archive, Edit, Search, UserPlus, Eye, ArchiveRestore } from "lucide-react"
-import jsPDF from "jspdf"
-import { useLongPress } from "@/hooks/useLongPress"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { toast } from "react-toastify";
+import api, { ENDPOINTS } from "../../api/api_url";
+import { Archive, Edit, Search, UserPlus, Eye, ArchiveRestore, Printer, } from "lucide-react";
+import jsPDF from "jspdf";
+import { useLongPress } from "@/hooks/useLongPress";
 
 // Import shadcn components
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DataTable } from "@/components/ui/DataTable"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTable } from "@/components/ui/DataTable";
 
-import "../../css/usermanagement.css"
-
+import "@/css/all.css";
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -363,8 +360,6 @@ export default function UserManagement() {
         return "Admin"
       case "employee":
         return "Employee"
-      default:
-        return "Unknown Role"
     }
   }
 
@@ -386,6 +381,7 @@ export default function UserManagement() {
       key: "email",
       header: "Email",
       sortable: true,
+      render: (user) => user.email || "No email added"
     },
     {
       key: "phone_number",
@@ -405,12 +401,12 @@ export default function UserManagement() {
     },
     {
       key: "actions",
-      header: "", // Remove the "Actions" text by setting header to empty string
+      header: "",
       className: "text-right",
       render: (user) => (
-        <div className="flex justify-end gap-4">
+        <div className="action-buttons-container">
           <button
-            className="action-button"
+            className="action-button edit-button"
             onClick={(e) => {
               e.stopPropagation();
               openUserModal(user);
@@ -420,7 +416,7 @@ export default function UserManagement() {
             <Edit className="h-4 w-4" />
           </button>
           <button
-            className="action-button"
+            className="action-button archive-button"
             onClick={(e) => {
               e.stopPropagation();
               if (user.status === "active") {
@@ -438,7 +434,7 @@ export default function UserManagement() {
             )}
           </button>
           <button
-            className="action-button"
+            className="action-button view-button"
             onClick={(e) => {
               e.stopPropagation();
               setViewUser(user);
@@ -467,7 +463,7 @@ export default function UserManagement() {
     <Card className="user-management-card">
       <CardHeader className="card-header">
         <div className="header-container">
-          <div className="search-input-container w-[400px]"> {/* Add fixed width here */}
+          <div className="search-input-container">
             <Search className="search-icon" />
             <Input 
               placeholder="Search users..."
@@ -475,7 +471,7 @@ export default function UserManagement() {
               onChange={handleSearch}
               onFocus={handleFocus}
               ref={inputRef}
-              className="search-input"
+              className="search-input w-full"
             />
           </div>
           <div className="button-group">
@@ -488,35 +484,36 @@ export default function UserManagement() {
       </CardHeader>
       <CardContent className="card-content">
         <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="tabs-container">
-          <div className="filter-container">
-            <div className="flex justify-between items-center w-full">
-              <TabsList className="tabs-list">
-                <TabsTrigger value="active" className="tab">
-                  Active Users
-                </TabsTrigger>
-                <TabsTrigger value="archived" className="tab">
-                  Archived Users
-                </TabsTrigger>
-                <Select value={roleFilter} onValueChange={setRoleFilter} className="role-select">
-                <SelectTrigger className="select-trigger w-[160px]">
-                  <SelectValue placeholder="All Roles" />
-                </SelectTrigger>
-                <SelectContent className="select-content">
-                  <SelectItem value="all" className="select-item">
-                    All Roles
-                  </SelectItem>
-                  <SelectItem value="admin" className="select-item">
-                    Admin
-                  </SelectItem>
-                  <SelectItem value="employee" className="select-item">
-                    Employee
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              </TabsList>
-            </div>
-          </div>
+        <div className="filter-container">
+          <div className="flex justify-between items-center w-full gap-4">
+            <TabsList className="tabs-list">
+              <TabsTrigger value="active" className="tab">
+                Active Users
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="tab">
+                Inactive Users
+              </TabsTrigger>
 
+            <Select value={roleFilter} onValueChange={setRoleFilter} className="role-select">
+              <SelectTrigger className="select-trigger">
+                <SelectValue placeholder="All Roles" />
+              </SelectTrigger>
+              <SelectContent className="select-content">
+                <SelectItem value="all" className="select-item">
+                  All Roles
+                </SelectItem>
+                <SelectItem value="admin" className="select-item">
+                  Admin
+                </SelectItem>
+                <SelectItem value="employee" className="select-item">
+                  Employee
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            </TabsList>
+          </div>
+        </div>
+          
           <div 
             {...longPressProps} 
             onTouchStart={longPressProps.onTouchStart}
@@ -683,48 +680,104 @@ export default function UserManagement() {
 
         {viewUser && (
           <div className="custom-modal-overlay">
-            <div className="custom-modal">
-              <div className="modal-header">
-                <h2 className="modal-title">User Information</h2>
+            <div className="custom-modal max-w-md w-full">
+              <div className="modal-header flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="modal-title text-2xl font-bold text-gray-900 dark:text-white">
+                    User Details
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Detailed information about this user
+                  </p>
+                </div>
                 <button
-                  className="close-button"
+                  className="close-button p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => setViewUser(null)}
                   aria-label="Close"
                   title="Close"
                 >
-                  <span className="material-icons">close</span>
+                  <span className="material-icons text-gray-500 dark:text-gray-400">close</span>
                 </button>
               </div>
-              <div className="user-details">
-                <p><strong>ID:</strong> {viewUser.id}</p>
-                <p><strong>Username:</strong> {viewUser.username}</p>
-                <p><strong>Full Name:</strong> {viewUser.first_name} {viewUser.last_name}</p>
-                <p><strong>Email:</strong> {viewUser.email || "No email added"}</p>
-                <p><strong>Phone:</strong> {viewUser.phone_number}</p>
-                <p><strong>Role:</strong> {getRoleDisplayName(viewUser.role)}</p>
-                <p><strong>Status:</strong> {viewUser.status}</p>
-                <p>
-                  <strong>Date Joined:</strong>{" "}
-                  {viewUser.date_joined
-                    ? new Date(viewUser.date_joined).toLocaleDateString("en-US")
-                    : "N/A"}
-                </p>
-              </div>
-              <div className="modal-actions">
-                <Button onClick={() => generatePDF(viewUser)} variant="outline" size="sm">
-                  Print PDF
-                </Button>
-                <Button onClick={() => setViewUser(null)} variant="outline" size="sm">
-                  Close
-                </Button>
-              </div>
+              
+              <div className="user-details space-y-4 mb-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">ID</p>
+              <p className="text-gray-900 dark:text-white">{viewUser.id}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Status</p>
+              <p className="text-gray-900 dark:text-white capitalize">{viewUser.status}</p>
             </div>
           </div>
-        )}
+          
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Username</p>
+            <p className="text-gray-900 dark:text-white">{viewUser.username}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Full Name</p>
+            <p className="text-gray-900 dark:text-white">{viewUser.first_name} {viewUser.last_name}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Email</p>
+            <p className="text-gray-900 dark:text-white">{viewUser.email || "No email added"}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Phone</p>
+            <p className="text-gray-900 dark:text-white">{viewUser.phone_number || "N/A"}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Role</p>
+            <p className="text-gray-900 dark:text-white">{getRoleDisplayName(viewUser.role)}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-bold">Date Joined</p>
+            <p className="text-gray-900 dark:text-white">
+              {viewUser.date_joined
+                ? new Date(viewUser.date_joined).toLocaleDateString("en-US", {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                : "N/A"}
+            </p>
+          </div>
+        </div>
+      
+      <div className="modal-actions flex justify-end space-x-3 mt-6">
+      <div className="button-group">
+      <Button 
+          onClick={() => generatePDF(viewUser)}
+          variant="outline"
+          size="sm"
+          className="add-button">
+            <Printer className="icon" />
+          Export PDF
+        </Button>
+        <Button 
+          onClick={() => setViewUser(null)}
+          size="sm"
+          className="cancel-button"
+        >
+          Close Details
+        </Button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
 
         {confirmationDialog.isOpen && (
           <div className="custom-modal-overlay">
-            <div className="custom-modal confirmation-modal">
+            <div className="confirmation-modal">
               <div className="confirmation-icon">
                 <span className="material-icons">warning</span>
               </div>
@@ -739,8 +792,8 @@ export default function UserManagement() {
                 </button>
                 <button
                   onClick={() => {
-                    confirmationDialog.onConfirm()
-                    setConfirmationDialog((prev) => ({ ...prev, isOpen: false }))
+                    confirmationDialog.onConfirm();
+                    setConfirmationDialog((prev) => ({ ...prev, isOpen: false }));
                   }}
                   className="confirm-button"
                 >

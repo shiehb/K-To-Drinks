@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router"
 import { useAuth } from "../context/AuthContext"
 import "../css/login.css"
-import Loader from "./styled-components/Loader"
+import { Eye, EyeOff, User, Lock, Sun, Moon } from "lucide-react"
 
 export default function Login() {
   const [error, setError] = useState("")
@@ -93,11 +93,7 @@ export default function Login() {
   return (
     <>
       {/* Full-screen loader */}
-      {loading && (
-        <div className="loader-overlay">
-          <Loader />
-        </div>
-      )}
+      {loading && <div className="loader-overlay"></div>}
 
       {/* Login Container */}
       <div className="login-wrapper">
@@ -107,7 +103,7 @@ export default function Login() {
           onClick={toggleDarkMode}
           aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
         >
-          <i className={`fas fa-${darkMode ? "sun" : "moon"}`}></i>
+          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
         {/* Error message */}
@@ -139,7 +135,7 @@ export default function Login() {
                   Username
                 </label>
                 <div className="input-with-icon">
-                  <i className="fas fa-user input-icon"></i>
+                  <User className="input-icon" size={18} />
                   <input
                     type="text"
                     id="username"
@@ -160,7 +156,7 @@ export default function Login() {
                   Password
                 </label>
                 <div className="input-with-icon">
-                  <i className="fas fa-lock input-icon"></i>
+                  <Lock className="input-icon" size={18} />
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
@@ -180,7 +176,7 @@ export default function Login() {
                     tabIndex="0"
                     onKeyDown={(e) => e.key === "Enter" && toggleShowPassword()}
                   >
-                    {showPassword ? <i className="fas fa-eye-slash"></i> : <i className="fas fa-eye"></i>}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </span>
                 </div>
               </div>
@@ -205,4 +201,3 @@ export default function Login() {
     </>
   )
 }
-

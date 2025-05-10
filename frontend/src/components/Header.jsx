@@ -7,6 +7,7 @@ import PropTypes from "prop-types"
 import { useAuth } from "../context/AuthContext"
 import "../css/header.css"
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
+import { Menu, Bell, Moon, LogOut } from "lucide-react"
 
 // Helper function to get initials
 function getInitials(firstName, lastName, userName) {
@@ -23,21 +24,21 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
   const [menuHovered, setMenuHovered] = useState(false)
   const [toastId, setToastId] = useState(null)
 
-  // Extract user data with proper field names
+  // Extract user data
   const userName = user?.username || "Guest"
-  const firstName = user?.firstName || "" // Matches the casing from AuthContext
-  const lastName = user?.lastName || ""   // Matches the casing from AuthContext
+  const firstName = user?.firstName || ""
+  const lastName = user?.lastName || ""
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : userName
 
-  // Development logging with proper Vite env variable
+  // Development logging
   useEffect(() => {
     if (import.meta.env.DEV) {
       console.log("Header user data:", {
         user,
-        derived: { userName, firstName, lastName, displayName }
-      });
+        derived: { userName, firstName, lastName, displayName },
+      })
     }
-  }, [user, userName, firstName, lastName, displayName]);
+  }, [user, userName, firstName, lastName, displayName])
 
   // Toggle the user menu
   const toggleMenu = () => {
@@ -86,7 +87,7 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
         draggable: false,
         closeButton: false,
         onClose: () => setToastId(null),
-      }
+      },
     )
 
     setToastId(id)
@@ -99,58 +100,88 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
           {/* Sidebar Toggle */}
           <div className="header-controls">
             <button
-              className="sidebar-toggle"
+              className={`sidebar-toggle ${loading ? "loading" : ""}`}
               onClick={toggleSidebar}
               aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
               title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
               disabled={loading}
             >
-              <span className="material-icons">
-                {loading ? "hourglass_empty" : sidebarOpen ? "menu_open" : "menu"}
-              </span>
+              <Menu className="icon" />
             </button>
           </div>
 
-          {/* Company Name */}
-          <div className="company-name">
-            <div className="title-top">K-TO-DRINKS</div>
-            <div className="title-bottom">TRADING</div>
+          {/* Company Logo */}
+          <div className="company-logo">
+            <div className="company-name">
+              <div className="title-top">K-TO-DRINKS</div>
+              <div className="title-bottom">TRADING</div>
+            </div>
           </div>
         </div>
 
         <div className="header-right">
-          {/* Dark Mode Toggle */}
-          <button
-            className="dark-mode-toggle"
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-            disabled={loading}
-          >
-            <span className="material-icons">
-              {darkMode ? "light_mode" : "dark_mode"}
-            </span>
-          </button>
+          <div className="header-right">
+            {/* Notification Bell */}
+            <div className="notification-container">
+              <button
+                className="notification-bell"
+                aria-label="Notifications"
+                onClick={() => {
+                  toast.info("Notifications feature coming soon!")
+                }}
+              >
+                <Bell className={`icon ${user?.notifications?.unread > 0 ? "pulse-animation" : ""}`} size={20} />
+                <span className={`notification-badge ${user?.notifications?.unread > 0 ? "pulse-badge" : ""}`}>
+                  {user?.notifications?.unread || 3}
+                </span>
+              </button>
+            </div>
 
-          {/* Replace menu-icon with Avatar */}
-          <div
-            className={`menu-trigger ${loading ? "loading" : ""}`}
-            onClick={!loading ? toggleMenu : undefined}
-            role="button"
-            tabIndex={!loading ? "0" : undefined}
-            aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
-            onKeyDown={(e) => !loading && e.key === "Enter" && toggleMenu()}
-          >
-            {loading ? (
-              <span className="material-icons">hourglass_empty</span>
-            ) : (
-              <Avatar>
-                <AvatarImage src={user?.avatarUrl} alt={displayName} />
-                <AvatarFallback>
-                  {getInitials(firstName, lastName, userName)}
-                </AvatarFallback>
-              </Avatar>
-            )}
+            {/* User Menu */}
+            <div
+              className={`menu-trigger ${loading ? "loading" : ""}`}
+              onClick={!loading ? toggleMenu : undefined}
+              role="button"
+              tabIndex={!loading ? "0" : undefined}
+              aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
+              onKeyDown={(e) => !loading && e.key === "Enter" && toggleMenu()}
+            >
+              {loading ? (
+                <span className="material-icons">hourglass_empty</span>
+              ) : (
+                <>
+                  <Avatar className="avatar-circle">
+                    <AvatarImage src={user?.avatarUrl || "/placeholder.svg"} alt={displayName} />
+                    <AvatarFallback
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "100%",
+                        height: "100%",
+                        lineHeight: "1",
+                      }}
+                    >
+                      {getInitials(firstName, lastName, userName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="user-username">@{userName}</div>
+                  <svg
+                    className={`dropdown-arrow ${isMenuOpen ? "open" : ""}`}
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -165,9 +196,18 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
         >
           <ul>
             <li role="menuitem" className="user-profile">
-              <Avatar className="size-10">
-                <AvatarImage src={user?.avatarUrl} alt={displayName} />
-                <AvatarFallback>
+              <Avatar className="avatar-circle size-10">
+                <AvatarImage src={user?.avatarUrl || "/placeholder.svg"} alt={displayName} />
+                <AvatarFallback
+                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  height: "100%",
+                  lineHeight: "1",
+                }}
+                >
                   {getInitials(firstName, lastName, userName)}
                 </AvatarFallback>
               </Avatar>
@@ -180,24 +220,23 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
             </li>
 
             <li role="menuitem" className="menu-item">
-              <span className="material-icons nav-icon">notifications</span>
+              <Bell className="nav-icon" size={18} />
               Notifications
             </li>
 
-            <li role="menuitem" className="menu-item">
-              <span className="material-icons nav-icon">assessment</span>
-              Reports
-            </li>
-
-            <li role="menuitem" className="menu-item" onClick={toggleDarkMode}>
-              <span className="material-icons nav-icon">
-                {darkMode ? "light_mode" : "dark_mode"}
-              </span>
-              {darkMode ? "Light Mode" : "Dark Mode"}
+            <li role="menuitem" className="menu-item theme-toggle-item">
+              <div className="theme-toggle-container">
+                <Moon className="nav-icon" size={18} /> {/* Added icon for consistency */}
+                <span className="theme-label">Dark Mode</span>
+              </div>
+              <label className="switch">
+                <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} aria-label="Toggle dark mode" />
+                <span className="slider round"></span>
+              </label>
             </li>
 
             <li role="menuitem" className="menu-item logout-item" onClick={handleLogoutClick}>
-              <span className="material-icons nav-icon">logout</span>
+              <LogOut className="nav-icon" size={18} />
               Log out
             </li>
           </ul>
@@ -207,7 +246,6 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
   )
 }
 
-// PropTypes validation
 Header.propTypes = {
   toggleSidebar: PropTypes.func.isRequired,
   sidebarOpen: PropTypes.bool.isRequired,
@@ -215,7 +253,6 @@ Header.propTypes = {
   sidebarHidden: PropTypes.bool,
 }
 
-// Default props
 Header.defaultProps = {
   toggleSidebarVisibility: () => {},
   sidebarHidden: false,

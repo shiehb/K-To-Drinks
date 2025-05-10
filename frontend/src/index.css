@@ -5,164 +5,191 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Root Variables - Light Mode (Default) */
+/* Update the color scheme with a more modern palette */
 :root {
-  /* Brand Colors */
-  --primary-color: #c23a22;
-  --primary-hover: rgba(194, 58, 34, 0.8);
+  /* Brand Colors - Updated to a more modern palette */
+  --primary-color: #3b82f6; /* Changed from reddish to blue */
+  --primary-hover: #2563eb;
 
-  /* Text Colors */
-  --text-color: #0c1d32;
-  --text-primary: #0c1d32;
-  --text-secondary: #2d3748;
-  --text-tertiary: #4a5568;
-  --stext-color: #e8e8e8;
+  /* Text Colors - Improved contrast */
+  --text-color: #1e293b;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --stext-color: #f8fafc;
 
-  /* UI Colors */
-  --border-color: #d1d5db;
-  --sborder-color: #e8e8e8;
-  --shadow-color: rgba(87, 87, 87, 0.2);
+  --nav-width: 250px;
+  --nav-collapsed-width: 70px;
+  --nav-item-height: 40px;
+  --header-height: 60px;
+  --main-spacing: 5px;
+
+  /* UI Colors - Refined for better visual hierarchy */
+  --border-color: #e2e8f0;
+  --sborder-color: #f1f5f9;
+  --shadow-color: rgba(15, 23, 42, 0.1);
   --background-color: #ffffff;
-  --sbackground-color: #f9fafb;
+  --sbackground-color: #f8fafc;
 
-  /* Status Colors */
-  --error-color: #c23a22;
-  --success-color: #4caf50;
-  --warning-color: #ff9800;
+  /* Status Colors - More vibrant and accessible */
+  --error-color: #ef4444;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
 
   /* Muted Colors */
-  --muted-text: #6c757d;
-  --muted-foreground: #6c757d;
+  --muted-text: #94a3b8;
+  --muted-foreground: #94a3b8;
 
   /* Component Colors */
   --card-background: #ffffff;
 
   /* Design Tokens */
-  --radius: 0.625rem;
-  --transition-speed: 0.3s;
+  --radius: 0.5rem;
+  --transition-speed: 0.2s;
 
-  /* ShadCN Compatible */
+  /* ShadCN Compatible - Updated to match new color scheme */
   --background: #ffffff;
-  --foreground: #0c1d32;
+  --foreground: #1e293b;
   --card: #ffffff;
-  --card-foreground: #0c1d32;
+  --card-foreground: #1e293b;
   --popover: #ffffff;
-  --popover-foreground: #0c1d32;
-  --primary: #c23a22;
+  --popover-foreground: #1e293b;
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
-  --secondary: #f9fafb;
-  --secondary-foreground: #0c1d32;
-  --accent: #f9fafb;
-  --accent-foreground: #0c1d32;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
   --destructive: #ef4444;
-  --input: #d1d5db;
-  --ring: #c23a22;
+  --input: #e2e8f0;
+  --ring: #3b82f6;
 
-  /* Chart Colors */
-  --chart-1: #c23a22;
-  --chart-2: #3b82f6;
-  --chart-3: #10b981;
-  --chart-4: #f59e0b;
-  --chart-5: #8b5cf6;
+  /* Chart Colors - More harmonious palette */
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #8b5cf6;
+  --chart-5: #ec4899;
 
   /* Sidebar Colors */
   --sidebar: #ffffff;
-  --sidebar-foreground: #0c1d32;
-  --sidebar-primary: #c23a22;
+  --sidebar-foreground: #1e293b;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f9fafb;
-  --sidebar-accent-foreground: #0c1d32;
-  --sidebar-border: #d1d5db;
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #1e293b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #3b82f6;
 }
 
-/* Dark Mode Variables */
+/* Dark Mode Variables - Enhanced for better contrast */
 .dark {
   /* Brand Colors */
-  --primary-color: #e74c3c;
-  --primary-hover: rgba(231, 76, 60, 0.8);
+  --primary-color: #3b82f6;
+  --primary-hover: #60a5fa;
 
-  /* Text Colors */
-  --text-color: #f8f9fa;
-  --text-primary: #f8f9fa;
-  --text-secondary: #e9ecef;
-  --text-tertiary: #dee2e6;
-  --stext-color: #0c1d32;
+  /* Text Colors - Improved readability in dark mode */
+  --text-color: #f1f5f9;
+  --text-primary: #f1f5f9;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --stext-color: #0f172a;
 
-  /* UI Colors */
-  --border-color: #555555;
-  --sborder-color: #444444;
-  --shadow-color: rgba(0, 0, 0, 0.5);
-  --background-color: #121212;
-  --sbackground-color: #1e1e1e;
+  /* UI Colors - Refined dark theme */
+  --border-color: #334155;
+  --sborder-color: #1e293b;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --background-color: #0f172a;
+  --sbackground-color: #1e293b;
 
-  /* Status Colors */
-  --error-color: #ff5252;
-  --success-color: #66bb6a;
-  --warning-color: #ffb74d;
+  /* Status Colors - Adjusted for dark mode visibility */
+  --error-color: #f87171;
+  --success-color: #34d399;
+  --warning-color: #fbbf24;
 
   /* Muted Colors */
-  --muted-text: #b0b0b0;
-  --muted-foreground: #a0a0a0;
+  --muted-text: #94a3b8;
+  --muted-foreground: #94a3b8;
 
   /* Component Colors */
-  --card-background: #1e1e1e;
+  --card-background: #1e293b;
 
   /* ShadCN Compatible */
-  --background: #121212;
-  --foreground: #f8f9fa;
-  --card: #1e1e1e;
-  --card-foreground: #f8f9fa;
-  --popover: #1e1e1e;
-  --popover-foreground: #f8f9fa;
-  --primary: #e74c3c;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  --popover: #1e293b;
+  --popover-foreground: #f1f5f9;
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
-  --secondary: #2d2d2d;
-  --secondary-foreground: #f8f9fa;
-  --accent: #2d2d2d;
-  --accent-foreground: #f8f9fa;
-  --destructive: #ef4444;
-  --input: #555555;
-  --ring: #e74c3c;
+  --secondary: #334155;
+  --secondary-foreground: #f1f5f9;
+  --accent: #334155;
+  --accent-foreground: #f1f5f9;
+  --destructive: #f87171;
+  --input: #334155;
+  --ring: #3b82f6;
 
   /* Chart Colors */
-  --chart-1: #e74c3c;
-  --chart-2: #60a5fa;
-  --chart-3: #34d399;
-  --chart-4: #fbbf24;
-  --chart-5: #a78bfa;
+  --chart-1: #60a5fa;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #f472b6;
 
   /* Sidebar Colors */
-  --sidebar: #1e1e1e;
-  --sidebar-foreground: #f8f9fa;
-  --sidebar-primary: #e74c3c;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2d2d2d;
-  --sidebar-accent-foreground: #f8f9fa;
-  --sidebar-border: #555555;
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #334155;
+  --sidebar-ring: #3b82f6;
 }
 
-/* Base Styles */
+/* Base Styles - Improved typography */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Product Sans", Arial, sans-serif;
-  transition: 
-    background-color var(--transition-speed) ease, 
-    color var(--transition-speed) ease, 
-    border-color var(--transition-speed) ease;
+  font-family: "Inter", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease, border-color
+    var(--transition-speed) ease, transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
 }
 
-/* Typography */
+/* Typography - Enhanced readability */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
 p, span, li {
   color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .text-muted {
@@ -192,10 +219,10 @@ p, span, li {
   color: var(--muted-text) !important;
 }
 
-/* Scrollbar Styling */
+/* Improved scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -203,15 +230,15 @@ p, span, li {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--primary-color);
-  border-radius: 4px;
+  background-color: var(--muted-text);
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--primary-hover);
+  background-color: var(--primary-color);
 }
 
-/* Layout Styles */
+/* Layout Styles - Improved spacing */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -232,7 +259,7 @@ p, span, li {
   flex: 1;
   background-color: var(--background-color);
   min-height: calc(100vh - var(--header-height));
-  padding: 20px;
+  padding: 1.25rem;
   transition: all 0.3s ease;
   margin-left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
@@ -320,8 +347,12 @@ p, span, li {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Utility Classes */
@@ -347,6 +378,49 @@ p, span, li {
 
 .bg-card {
   background-color: var(--card-background);
+}
+
+/* Add smooth transitions for interactive elements */
+button, a, input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+/* Add subtle hover effects for interactive elements */
+button:hover, a:hover {
+  transform: translateY(-1px);
+}
+
+button:active, a:active {
+  transform: translateY(0);
+}
+
+/* Improved focus states for accessibility */
+button:focus, a:focus, input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Responsive font sizes */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1.125rem;
+  }
+  
+  h4 {
+    font-size: 1rem;
+  }
+  
+  p, span, li {
+    font-size: 0.875rem;
+  }
 }
 
 @theme inline {

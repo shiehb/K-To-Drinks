@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { useState, useEffect } from "react"
+
 import { useAuth } from "./context/AuthContext"
 import Layout from "./components/Layout"
 import LoginPage from "./pages/LoginPage"
@@ -14,10 +15,13 @@ import OrderPage from "./pages/OrderPage"
 import DeliveryPage from "./pages/DeliveryPage"
 import DashboardPage from "./pages/DashboardPage"
 import UserPage from "./pages/UserPage"
+
 import { toast } from "react-toastify"
+
 import api from "./api/api_url"
 import "./index.css"
-import "./css/pages.css" // Ensure pages.css is imported
+import "./css/pages.css"
+import PropTypes from "prop-types"
 
 // Global toast configuration
 const toastConfig = {
@@ -71,12 +75,15 @@ const PrivateRoute = ({ element }) => {
 
   return user ? element : <Navigate to="/" replace />
 }
+PrivateRoute.propTypes = {
+  element: PropTypes.element.isRequired,
+}
 
 function App() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
-  const [darkMode, setDarkMode] = useState(false) // State for dark mode
+  const [darkMode] = useState(false)
 
   // Enhanced fetch with token refresh handling
   useEffect(() => {

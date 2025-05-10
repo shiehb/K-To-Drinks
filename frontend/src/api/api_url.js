@@ -2,50 +2,73 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-// API Base URL
-const BASE_URL = 'http://localhost:8000/api';
-
-// Define endpoints
+// Ensure all endpoints have consistent trailing slashes
 export const ENDPOINTS = {
-  USERS: '/users',
-  STORES: '/stores',
-  PRODUCTS: '/products/products/', // Make sure this matches your Django URL pattern
-  CATEGORIES: '/products/categories/',
-  SUPPLIERS: '/products/suppliers/',
-  INVENTORY: '/inventory',
-  ORDERS: '/orders',
-  DELIVERIES: '/deliveries'
+  USERS: '/users/',
+  STORES: '/stores/',
+  PRODUCTS: '/products/',
+  INVENTORY: '/inventory/',
+  ORDERS: '/orders/',
+  DELIVERIES: '/deliveries/'
+};
+
+// Helper function to ensure trailing slash
+const ensureTrailingSlash = (url) => {
+  return url.endsWith('/') ? url : `${url}/`;
 };
 
 // Create axios instance
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: 'http://localhost:8000/api',
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
 });
 
-// Add request interceptor for authentication
+// Request interceptor to handle trailing slashes and auth
 api.interceptors.request.use(
   (config) => {
+    // Ensure URL has trailing slash for POST/PUT/PATCH requests
+    if (['post', 'put', 'patch'].includes(config.method?.toLowerCase())) {
+      config.url = ensureTrailingSlash(config.url);
+    }
+
+    // Add auth token if available
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Add response interceptor for handling auth errors
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access
-      toast.error("Session expired. Please login again.");
-      // Redirect to login or refresh token
+    // Handle trailing slash errors specifically
+    if (error.response?.status === 404 && 
+        ['post', 'put', 'patch'].includes(error.config.method?.toLowerCase()) &&
+        !error.config.url.endsWith('/')) {
+      toast.error("API request failed - endpoint requires trailing slash");
     }
+    // Handle unauthorized errors
+    else if (error.response?.status === 401) {
+      toast.error("Session expired. Please login again.");
+      // Optional: Redirect to login or refresh token
+    }
+    // Handle other errors
+    else if (error.response?.data?.detail) {
+      toast.error(error.response.data.detail);
+    } else if (error.message) {
+      toast.error(error.message);
+    }
+
     return Promise.reject(error);
   }
 );
