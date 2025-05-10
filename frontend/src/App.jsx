@@ -154,7 +154,7 @@ function App() {
         </Route>
 
         {/* Fallback route */}
-        <Route path="*" element={<Navigate to="" />} />
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   )
