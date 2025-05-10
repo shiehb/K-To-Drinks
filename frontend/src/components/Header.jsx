@@ -68,7 +68,7 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
           <button
             onClick={() => {
               logout()
-              navigate("/")
+              navigate("/login")
               toast.dismiss(id)
             }}
             className="btn-yes"
