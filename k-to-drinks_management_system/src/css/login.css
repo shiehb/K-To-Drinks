@@ -1,0 +1,615 @@
+/* LoginPage */
+.login-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-color);
+  color: var(--text-color);
+  padding: 1rem;
+  position: relative;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Theme toggle button */
+.theme-toggle-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle-btn:hover {
+  transform: rotate(30deg);
+}
+
+.theme-toggle-btn i {
+  font-size: 18px;
+}
+
+/* Left Section */
+.login-left {
+  flex: 1;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .login-left {
+    display: block;
+  }
+}
+
+.login-image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* background-image: url("./erik-mclean-cjasXFVMt64-unsplash.jpg"); */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color:rgba(37, 100, 235, 0.5);
+}
+
+.login-title {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: white;
+}
+
+.login-title-top {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+}
+
+.login-title-bottom {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: 10px;
+}
+
+/* Right Section */
+.login-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: var(--sbackground-color);
+}
+
+/* Login Form */
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  transition: 0.4s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Login Form Heading */
+.login-form h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+/* Login Form Subheading */
+.login-form p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
+
+/* Input Group */
+.input-group {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+/* Labels */
+.labels {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+/* Input with icon container */
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-color);
+  font-size: 1rem;
+  z-index: 1;
+}
+
+/* Input Fields - Fixed padding */
+.inputs {
+  width: 100%;
+  padding: 0 2.5rem;
+  height: 3.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 25px;
+  outline: none;
+  font-size: 1rem;
+  background: transparent;
+  color: var(--text-color);
+  transition: all 0.3s ease;
+  text-indent: 0;
+  line-height: 3.5rem;
+}
+
+.inputs::placeholder {
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+.inputs:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(194, 58, 34, 0.2);
+  background-color: var(--background-color);
+}
+
+/* Password Toggle Icon */
+.password-toggle-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  transition: color 0.2s ease;
+  z-index: 1;
+}
+
+.password-toggle-icon:hover {
+  color: var(--primary-color);
+}
+
+/* Remember me checkbox */
+.remember-me {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 1.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  user-select: none;
+  color: var(--text-color);
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1.25rem;
+  width: 1.25rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 0.4rem;
+  top: 0.2rem;
+  width: 0.3rem;
+  height: 0.6rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Login Button */
+.button {
+  padding: 1rem;
+  width: 100%;
+  height: 3.5rem;
+  border: none;
+  border-radius: 25px;
+  outline: none;
+  background-color: var(--primary-color);
+  color: var(--stext-color);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  cursor: pointer;
+  transition: 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(194, 58, 34, 0.3);
+}
+
+.button:hover,
+.button:focus {
+  background-color:  #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(194, 58, 34, 0.4);
+}
+
+.button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(194, 58, 34, 0.3);
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #d86b57;
+}
+
+/* Error message */
+.error-message {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 0, 0, 0.1);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--error-color);
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  width: 100%;
+  max-width: 400px;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Loader overlay */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.dark .loader-overlay {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Media Queries for Responsive Design */
+@media (min-width: 1920px) {
+  .login-container {
+    max-width: 1200px;
+  }
+
+  .login-title-top {
+    font-size: 2.5rem;
+  }
+
+  .login-title-bottom {
+    font-size: 3rem;
+  }
+
+  .login-form {
+    max-width: 450px;
+  }
+
+  .login-form h1 {
+    font-size: 2.5rem;
+  }
+
+  .login-form p {
+    font-size: 1.2rem;
+  }
+
+  .inputs {
+    font-size: 1.1rem;
+  }
+
+  .button {
+    font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .login-container {
+    max-width: 1000px;
+  }
+
+  .login-form {
+    max-width: 400px;
+  }
+
+  .login-form h1 {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .login-form p {
+    font-size: 18px;
+    margin-bottom: 35px;
+  }
+
+  .inputs {
+    font-size: 18px;
+  }
+
+  .button {
+    height: 55px;
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .login-container {
+    max-width: 900px;
+  }
+
+  .login-right {
+    padding: 1.5rem;
+  }
+
+  .login-form {
+    max-width: 350px;
+  }
+
+  .login-form h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+
+  .login-form p {
+    font-size: 16px;
+    margin-bottom: 30px;
+  }
+
+  .inputs {
+    height: 50px;
+    font-size: 16px;
+    line-height: 50px;
+  }
+
+  .button {
+    height: 50px;
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .login-container {
+    max-width: 700px;
+  }
+
+  .login-right {
+    padding: 1.25rem;
+  }
+
+  .login-title-top {
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+  }
+
+  .login-title-bottom {
+    font-size: 2rem;
+    letter-spacing: 6px;
+  }
+
+  .login-form {
+    max-width: 300px;
+  }
+
+  .login-form h1 {
+    font-size: 1.75rem;
+  }
+
+  .login-form p {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .inputs {
+    height: 3rem;
+    font-size: 0.9rem;
+    line-height: 3rem;
+  }
+
+  .button {
+    height: 3rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .login-container {
+    flex-direction: column;
+    max-width: 400px;
+  }
+
+  .login-right {
+    padding: 1.5rem;
+  }
+
+  .login-form {
+    max-width: 100%;
+  }
+
+  .login-form h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-form p {
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .labels {
+    font-size: 0.9rem;
+  }
+
+  .inputs {
+    height: 2.75rem;
+    font-size: 0.85rem;
+    line-height: 2.75rem;
+  }
+
+  .input-icon {
+    font-size: 0.9rem;
+  }
+
+  .password-toggle-icon {
+    font-size: 0.9rem;
+  }
+
+  .button {
+    height: 2.75rem;
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+  }
+
+  .error-message {
+    max-width: 90%;
+    font-size: 0.8rem;
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-right {
+    padding: 1.25rem;
+  }
+
+  .login-form h1 {
+    font-size: 1.25rem;
+  }
+
+  .login-form p {
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .inputs {
+    height: 2.5rem;
+    line-height: 2.5rem;
+  }
+
+  .button {
+    height: 2.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
+
+  .theme-toggle-btn {
+    top: 10px;
+    right: 10px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .theme-toggle-btn i {
+    font-size: 16px;
+  }
+}
+
